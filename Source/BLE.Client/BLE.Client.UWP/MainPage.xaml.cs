@@ -16,7 +16,19 @@ namespace BLE.Client.UWP
         {
             this.InitializeComponent();
 
-            TestSpeed();
+            //TestSpeed();
+
+            DownloadData();
+        }
+
+        protected async void DownloadData()
+        {
+            ForegroundSyncService serv = new ForegroundSyncService("00000000-0000-0000-0000-e7452c6d6f14","JC",shimmer.Models.CommunicationState.CommunicationMode.ForceDataTransferSync);
+            bool success = await serv.GetKnownDevice();
+            if (success)
+            {
+                var data = await serv.ExecuteDataRequest();
+            }
         }
 
         protected async void TestSpeed()
