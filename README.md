@@ -4,7 +4,6 @@ Shimmer Examples
 - Requires adding reference to the shimmer ble project from ShimmerCSharpBLEAPI, currently this project is private, but will eventually be made public
 - When using BLE.Client.Droid or BLE.Client.UWP or other examples, ensure the project does not reference the local plugin.ble projects and uses nuget. 
 - Ensure the example projects references the shimmer ble project mentioned above
-- Note to update the ble address of the verisense sensor you want to use. we will aim to update the UI to accomodate this in the future
 
 Android Example (Samples -> BLE.Client.Droid)
 - You will require to grant the app permission which will popup when run

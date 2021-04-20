@@ -528,7 +528,7 @@ namespace BLE.Client.ViewModels
 
         protected async void DownloadData()
         {
-            ForegroundSyncService serv = new ForegroundSyncService(PreviousGuid.ToString(), "JC", shimmer.Models.CommunicationState.CommunicationMode.ForceDataTransferSync);
+            ForegroundSyncService serv = new ForegroundSyncService(PreviousGuid.ToString(), "SensorName", shimmer.Models.CommunicationState.CommunicationMode.ForceDataTransferSync);
             bool success = await serv.GetKnownDevice();
             if (success)
             {
