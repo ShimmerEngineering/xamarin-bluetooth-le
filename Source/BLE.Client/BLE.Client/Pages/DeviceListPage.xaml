@@ -73,9 +73,13 @@
                           ItemTemplate="{StaticResource DeviceItemTemplate}">
                 </ListView>
 
-                <StackLayout Grid.Row="2" Orientation="Vertical">
+                    <StackLayout Grid.Row="2" Orientation="Vertical">
                     <BoxView BackgroundColor="Gray" HeightRequest="1"/>
                     <Label Text="{Binding PreviousGuid, StringFormat='GUID {0}'}"
+                           FontSize="Small"
+                           TextColor="Gray"
+                           VerticalTextAlignment="End" />
+                    <Label Text="{Binding TransferSpeed}"
                            FontSize="Small"
                            TextColor="Gray"
                            VerticalTextAlignment="End" />
@@ -100,7 +104,8 @@
                                 ItemsSource="{Binding ScanModes}"
                                 SelectedItem="{Binding SelectedScanMode, Mode=TwoWay}" />
                     </StackLayout>
-                    <StackLayout Orientation="Horizontal">
+                    <ScrollView Orientation="Horizontal">
+                        <StackLayout Orientation="Horizontal">
                         <Button Text="Connect to previous"
                                 Command="{Binding ConnectToPreviousCommand}"
                                 HorizontalOptions="Start" />
@@ -110,6 +115,12 @@
                         <Button Text="Stop Scan"
                                 Command="{Binding StopScanCommand}"
                                 HorizontalOptions="End" />
+                        <Button Text="Speed Test"
+                                Command="{Binding TestSpeedCommand}"
+                                HorizontalOptions="End" />
+                        <Button Text="Data Sync"
+                                Command="{Binding DownloadDataCommand}"
+                                HorizontalOptions="End" />
                         <ActivityIndicator IsRunning="{Binding IsRefreshing}"
                                            IsVisible="{Binding IsRefreshing}"
                                            HeightRequest="24"
@@ -117,6 +128,8 @@
                                            VerticalOptions="Center"
                                            HorizontalOptions="FillAndExpand" />
                     </StackLayout>
+                    </ScrollView>
+
                 </StackLayout>
             </Grid>
         </ContentPage>

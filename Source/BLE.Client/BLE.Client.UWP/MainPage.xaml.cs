@@ -15,10 +15,8 @@ namespace BLE.Client.UWP
         public MainPage()
         {
             this.InitializeComponent();
-
             //TestSpeed();
-
-            DownloadData();
+            //DownloadData();
         }
 
         protected async void DownloadData()
