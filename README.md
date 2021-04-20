@@ -1,19 +1,19 @@
 # <img src="icon_small.png" width="71" height="71"/> Bluetooth LE plugin for Xamarin 
 Shimmer Examples
 - Currently obtaining plugin.ble via nuget (2.2.0-pre2)
-- Requires adding the shimmer ble project, currently this project is private, but will eventually be made public
+- Requires adding reference to the shimmer ble project from ShimmerCSharpBLEAPI, currently this project is private, but will eventually be made public
 - When using BLE.Client.Droid or BLE.Client.UWP or other examples, ensure the project does not reference the local plugin.ble projects and uses nuget. 
-- Ensure the the example projects references the shimmer ble project mentioned above
+- Ensure the example projects references the shimmer ble project mentioned above
 - Note to update the ble address of the verisense sensor you want to use. we will aim to update the UI to accomodate this in the future
 
-Android Example
-- You will require giving the app permission manually
+Android Example (Samples -> BLE.Client.Droid)
+- You will require to grant the app permission which will popup when run
 - The bin file is stored in Android.OS.Environment.GetExternalStoragePublicDirectory(Android.OS.Environment.DirectoryDocuments).Path (see LocalFolderService.cs)
-- See MainActivity.cs for both TestSpeed and DownloadData options
 
-UWP Example
+UWP Example (Samples -> BLE.Client.UWP)
 - The bin file is stored in ApplicationData.Current.LocalFolder.Path (see LocalFolderService.cs)
-- See MainPage.xaml.cs for both TestSpeed and DownloadData options
+
+See DeviceListViewModel.cs for both TestSpeed and DownloadData options
 
 [Bitrise build status:](https://app.bitrise.io/app/3fe54d0a5f43c2bf) ![Build Status](https://app.bitrise.io/app/3fe54d0a5f43c2bf/status.svg?token=i9LUY4rIecZWd_3j7hwXgw) 
 
