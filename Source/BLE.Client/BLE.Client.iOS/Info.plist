@@ -25,7 +25,7 @@
 	<key>CFBundleDisplayName</key>
 	<string>BLE.Client</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.plugin.ble</string>
+	<string>com.plugin.ble.shimmer</string>
 	<key>CFBundleVersion</key>
 	<string>1.0</string>
 	<key>UILaunchStoryboardName</key>
@@ -36,5 +36,7 @@
 	<string>Assets.xcassets/AppIcon.appiconset</string>
 	<key>XSLaunchImageAssets</key>
 	<string>Assets.xcassets/LaunchImage.launchimage</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Our app uses bluetooth to find, connect and transfer data between different devices</string>
 </dict>
 </plist>
