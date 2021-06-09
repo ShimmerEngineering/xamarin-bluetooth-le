@@ -17,10 +17,11 @@ using MvvmCross.Commands;
 using MvvmCross.Navigation;
 using MvvmCross;
 using Xamarin.Forms;
+using shimmer.Services;
 
 namespace BLE.Client.ViewModels
 {
-    public class DeviceListViewModel : BaseViewModel
+    public class DeviceListViewModel : BaseViewModel, IObserver<String>//, INotifyPropertyChanged
     {
         private readonly IBluetoothLE _bluetoothLe;
         private readonly IUserDialogs _userDialogs;
@@ -44,6 +45,8 @@ namespace BLE.Client.ViewModels
         public MvxCommand<DeviceListItemViewModel> DisconnectCommand => new MvxCommand<DeviceListItemViewModel>(DisconnectDevice);
 
         public MvxCommand<DeviceListItemViewModel> ConnectDisposeCommand => new MvxCommand<DeviceListItemViewModel>(ConnectAndDisposeDevice);
+        public MvxCommand TestSpeedCommand => new MvxCommand(() => TestSpeed());
+        public MvxCommand DownloadDataCommand => new MvxCommand(() => DownloadData());
 
         public ObservableCollection<DeviceListItemViewModel> Devices { get; set; } = new ObservableCollection<DeviceListItemViewModel>();
         public bool IsRefreshing => (Adapter != null) ? Adapter.IsScanning : false;
@@ -522,5 +525,65 @@ namespace BLE.Client.ViewModels
         {
             PreviousGuid = device.Id;
         });
+
+        protected async void DownloadData()
+        {
+            ForegroundSyncService serv = new ForegroundSyncService(PreviousGuid.ToString(), "SensorName", shimmer.Models.CommunicationState.CommunicationMode.ForceDataTransferSync);
+            bool success = await serv.GetKnownDevice();
+            if (success)
+            {
+                var data = await serv.ExecuteDataRequest();
+            }
+        }
+
+        protected async void TestSpeed()
+        {
+            SpeedTestService serv = new SpeedTestService(PreviousGuid.ToString());
+            serv.Subscribe(this);
+            await serv.GetKnownDevice();
+            if (serv.ConnectedASM != null)
+            {
+                while (true)
+                {
+                    System.Console.WriteLine("Memory Lookup Execution");
+                    await serv.ExecuteMemoryLookupTableCommand();
+                    await Task.Delay(60000);
+                }
+            }
+            else
+            {
+                System.Console.WriteLine("Connect Fail");
+            }
+        }
+
+        string displayText = "1) Pair Verisense Sensor to PC first! 2) Scan, select sensor and choose copy GUID, 3) Start Speed Test or Data Sync";
+        public string TransferSpeed
+        {
+            protected set
+            {
+                if (displayText != value)
+                {
+                    displayText = value;
+                    RaisePropertyChanged();
+                }
+            }
+            get { return displayText; }
+        }
+
+        public void OnCompleted()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnError(Exception error)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnNext(string value)
+        {
+            Trace.Message("Works" + value);
+            TransferSpeed = value;
+        }
     }
 }
