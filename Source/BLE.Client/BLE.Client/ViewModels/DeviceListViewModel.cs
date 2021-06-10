@@ -18,6 +18,7 @@ using MvvmCross.Navigation;
 using MvvmCross;
 using Xamarin.Forms;
 using shimmer.Services;
+using shimmer.Models;
 
 namespace BLE.Client.ViewModels
 {
@@ -526,13 +527,29 @@ namespace BLE.Client.ViewModels
             PreviousGuid = device.Id;
         });
 
+        
+
+        private void ShimmerDevice_BLEEvent(object sender, ShimmerBLEEventData e)
+        {
+            System.Console.WriteLine("SHIMMER DEVICE BLE EVENT: " + e.ToString());
+        }
         protected async void DownloadData()
         {
+            /*
             ForegroundSyncService serv = new ForegroundSyncService(PreviousGuid.ToString(), "SensorName", shimmer.Models.CommunicationState.CommunicationMode.ForceDataTransferSync);
+            serv.ShimmerBLEEvent += ShimmerDevice_BLEEvent;
             bool success = await serv.GetKnownDevice();
             if (success)
             {
                 var data = await serv.ExecuteDataRequest();
+            }
+            */
+            ForegroundSyncService serv = new ForegroundSyncService(PreviousGuid.ToString(), "SensorName", shimmer.Models.CommunicationState.CommunicationMode.ForceDataTransferSync);
+            serv.ShimmerBLEEvent += ShimmerDevice_BLEEvent;
+            bool success = await serv.GetKnownDevice();
+            if (success)
+            {
+                var data = await serv.ExecuteStreamRequest();
             }
         }
 
