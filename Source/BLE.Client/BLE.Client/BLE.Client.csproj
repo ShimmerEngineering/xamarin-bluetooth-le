@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\ShimmerCSharpBLEAPI\shimmer\shimmer.csproj" />
     <ProjectReference Include="..\..\MvvmCross.Plugins.BLE\MvvmCross.Plugins.BLE.csproj" />
+    <ProjectReference Include="D:\Documents\GitHub\Shimmer-C-API\ShimmerAPI\ShimmerAPI\ShimmerAPI.csproj" />
   </ItemGroup>
 
   <ItemGroup>

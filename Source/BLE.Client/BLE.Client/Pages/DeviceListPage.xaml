@@ -104,6 +104,7 @@
                                 ItemsSource="{Binding ScanModes}"
                                 SelectedItem="{Binding SelectedScanMode, Mode=TwoWay}" />
                     </StackLayout>
+                        
                     <ScrollView Orientation="Horizontal">
                         <StackLayout Orientation="Horizontal">
                         <Button Text="Connect to previous"
@@ -120,6 +121,9 @@
                                 HorizontalOptions="End" />
                         <Button Text="Data Sync"
                                 Command="{Binding DownloadDataCommand}"
+                                HorizontalOptions="End" />
+                            <Button Text="Data Stream"
+                                Command="{Binding StreamDataCommand}"
                                 HorizontalOptions="End" />
                         <ActivityIndicator IsRunning="{Binding IsRefreshing}"
                                            IsVisible="{Binding IsRefreshing}"

@@ -19,6 +19,9 @@ using MvvmCross;
 using Xamarin.Forms;
 using shimmer.Services;
 using shimmer.Models;
+using ShimmerAPI;
+using static shimmer.Services.ForegroundSyncService;
+using shimmer.Sensors;
 
 namespace BLE.Client.ViewModels
 {
@@ -29,7 +32,7 @@ namespace BLE.Client.ViewModels
         private readonly ISettings _settings;
         private Guid _previousGuid;
         private CancellationTokenSource _cancellationTokenSource;
-
+        ForegroundSyncService SyncService;
         public Guid PreviousGuid
         {
             get => _previousGuid;
@@ -48,7 +51,7 @@ namespace BLE.Client.ViewModels
         public MvxCommand<DeviceListItemViewModel> ConnectDisposeCommand => new MvxCommand<DeviceListItemViewModel>(ConnectAndDisposeDevice);
         public MvxCommand TestSpeedCommand => new MvxCommand(() => TestSpeed());
         public MvxCommand DownloadDataCommand => new MvxCommand(() => DownloadData());
-
+        public MvxCommand StreamDataCommand => new MvxCommand(() => StreamData());
         public ObservableCollection<DeviceListItemViewModel> Devices { get; set; } = new ObservableCollection<DeviceListItemViewModel>();
         public bool IsRefreshing => (Adapter != null) ? Adapter.IsScanning : false;
         public bool IsStateOn => _bluetoothLe.IsOn;
@@ -531,7 +534,18 @@ namespace BLE.Client.ViewModels
 
         private void ShimmerDevice_BLEEvent(object sender, ShimmerBLEEventData e)
         {
-            System.Console.WriteLine("SHIMMER DEVICE BLE EVENT: " + e.ToString());
+            
+            if (e.CurrentEvent == BLEEvent.NewDataPacket)
+            {
+                ObjectCluster ojc = ((ObjectCluster)e.ObjMsg);
+                var a2x = ojc.GetData(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_ACC_X, ShimmerConfiguration.SignalFormats.CAL);
+                var a2y = ojc.GetData(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_ACC_Y, ShimmerConfiguration.SignalFormats.CAL);
+                var a2z = ojc.GetData(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_ACC_Z, ShimmerConfiguration.SignalFormats.CAL);
+                System.Console.WriteLine("New Data Packet: " + "  X : " +a2x.Data + "  Y : " + a2y.Data + "  Z : " + a2z.Data);
+            } else if (e.CurrentEvent== BLEEvent.StateChange)
+            {
+                System.Console.WriteLine("SHIMMER DEVICE BLE EVENT: " + SyncService.GetBluetoothState().ToString());
+            }
         }
         protected async void DownloadData()
         {
@@ -544,12 +558,32 @@ namespace BLE.Client.ViewModels
                 var data = await serv.ExecuteDataRequest();
             }
             */
+            SyncService = new ForegroundSyncService(PreviousGuid.ToString(), "SensorName", shimmer.Models.CommunicationState.CommunicationMode.ForceDataTransferSync);
+            SyncService.ShimmerBLEEvent += ShimmerDevice_BLEEvent;
+            bool success = await SyncService.GetKnownDevice();
+            if (success)
+            {
+                var data = await SyncService.ExecuteDataRequest();
+            }
+        }
+        protected async void StreamData()
+        {
+            /*
             ForegroundSyncService serv = new ForegroundSyncService(PreviousGuid.ToString(), "SensorName", shimmer.Models.CommunicationState.CommunicationMode.ForceDataTransferSync);
             serv.ShimmerBLEEvent += ShimmerDevice_BLEEvent;
             bool success = await serv.GetKnownDevice();
             if (success)
             {
-                var data = await serv.ExecuteStreamRequest();
+                var data = await serv.ExecuteDataRequest();
+            }
+            */
+            SyncService = new ForegroundSyncService(PreviousGuid.ToString(), "SensorName", shimmer.Models.CommunicationState.CommunicationMode.ForceDataTransferSync);
+            SyncService.ShimmerBLEEvent += ShimmerDevice_BLEEvent;
+            bool success = await SyncService.GetKnownDevice();
+            if (success)
+            {
+                var data = await SyncService.ExecuteStreamRequest();
+
             }
         }
 
