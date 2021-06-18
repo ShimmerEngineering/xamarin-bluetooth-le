@@ -22,6 +22,7 @@ using shimmer.Models;
 using ShimmerAPI;
 using static shimmer.Services.ForegroundSyncService;
 using shimmer.Sensors;
+using static shimmer.Models.ShimmerBLEEventData;
 
 namespace BLE.Client.ViewModels
 {
@@ -50,8 +51,12 @@ namespace BLE.Client.ViewModels
 
         public MvxCommand<DeviceListItemViewModel> ConnectDisposeCommand => new MvxCommand<DeviceListItemViewModel>(ConnectAndDisposeDevice);
         public MvxCommand TestSpeedCommand => new MvxCommand(() => TestSpeed());
+        public MvxCommand ConnectCommand => new MvxCommand(() => Connect());
+        public MvxCommand DisconnectVRECommand => new MvxCommand(() => Disconnect());
+        public MvxCommand ReadStatusCommand => new MvxCommand(() => ReadStatus());
         public MvxCommand DownloadDataCommand => new MvxCommand(() => DownloadData());
         public MvxCommand StreamDataCommand => new MvxCommand(() => StreamData());
+        public MvxCommand StopStreamCommand => new MvxCommand(() => StopStream());
         public ObservableCollection<DeviceListItemViewModel> Devices { get; set; } = new ObservableCollection<DeviceListItemViewModel>();
         public bool IsRefreshing => (Adapter != null) ? Adapter.IsScanning : false;
         public bool IsStateOn => _bluetoothLe.IsOn;
@@ -535,18 +540,52 @@ namespace BLE.Client.ViewModels
         private void ShimmerDevice_BLEEvent(object sender, ShimmerBLEEventData e)
         {
             
-            if (e.CurrentEvent == BLEEvent.NewDataPacket)
+            if (e.CurrentEvent == VerisenseBLEEvent.NewDataPacket)
             {
                 ObjectCluster ojc = ((ObjectCluster)e.ObjMsg);
                 var a2x = ojc.GetData(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_ACC_X, ShimmerConfiguration.SignalFormats.CAL);
                 var a2y = ojc.GetData(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_ACC_Y, ShimmerConfiguration.SignalFormats.CAL);
                 var a2z = ojc.GetData(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_ACC_Z, ShimmerConfiguration.SignalFormats.CAL);
                 System.Console.WriteLine("New Data Packet: " + "  X : " +a2x.Data + "  Y : " + a2y.Data + "  Z : " + a2z.Data);
-            } else if (e.CurrentEvent== BLEEvent.StateChange)
+                TransferSpeed = "New Data Packet: " + "  X : " + Math.Round(a2x.Data,2) + "  Y : " + Math.Round(a2y.Data,2) + "  Z : " + Math.Round(a2z.Data,2);
+            } else if (e.CurrentEvent== VerisenseBLEEvent.StateChange)
             {
                 System.Console.WriteLine("SHIMMER DEVICE BLE EVENT: " + SyncService.GetBluetoothState().ToString());
+                DeviceState = "Device State: " + SyncService.GetBluetoothState().ToString();
+            } else if (e.CurrentEvent == VerisenseBLEEvent.SyncLoggedDataNewPayload)
+            {
+                TransferSpeed = SyncService.dataFilePath + " : " + e.Message;
+            } else if (e.CurrentEvent == VerisenseBLEEvent.SyncLoggedDataComplete)
+            {
+                TransferSpeed = SyncService.dataFilePath + " : " + e.CurrentEvent.ToString();
+            } else if (e.CurrentEvent == VerisenseBLEEvent.RequestResponse)
+            {
+                if (e.ObjMsg is StatusPayload) {
+                    TransferSpeed = "Battery % =" + ((StatusPayload)e.ObjMsg).BatteryPercent + " UsbPowered =" + ((StatusPayload)e.ObjMsg).UsbPowered;
+                }
             }
         }
+
+        protected async void Connect()
+        {
+            if (SyncService!=null)
+            {
+                SyncService.ShimmerBLEEvent -= ShimmerDevice_BLEEvent;
+            }
+            SyncService = new ForegroundSyncService(PreviousGuid.ToString(), "SensorName", shimmer.Models.CommunicationState.CommunicationMode.ForceDataTransferSync);
+            SyncService.ShimmerBLEEvent += ShimmerDevice_BLEEvent;
+            SyncService.Connect();
+
+        }
+        protected async void Disconnect()
+        {
+            SyncService.Disconnect();
+        }
+        protected async void ReadStatus()
+        {
+            SyncService.ExecuteRequest(RequestType.Status);
+        }
+
         protected async void DownloadData()
         {
             /*
@@ -558,35 +597,20 @@ namespace BLE.Client.ViewModels
                 var data = await serv.ExecuteDataRequest();
             }
             */
-            SyncService = new ForegroundSyncService(PreviousGuid.ToString(), "SensorName", shimmer.Models.CommunicationState.CommunicationMode.ForceDataTransferSync);
-            SyncService.ShimmerBLEEvent += ShimmerDevice_BLEEvent;
-            bool success = await SyncService.GetKnownDevice();
-            if (success)
-            {
-                var data = await SyncService.ExecuteDataRequest();
-            }
+              var data = await SyncService.ExecuteDataRequest();
+           
         }
         protected async void StreamData()
         {
-            /*
-            ForegroundSyncService serv = new ForegroundSyncService(PreviousGuid.ToString(), "SensorName", shimmer.Models.CommunicationState.CommunicationMode.ForceDataTransferSync);
-            serv.ShimmerBLEEvent += ShimmerDevice_BLEEvent;
-            bool success = await serv.GetKnownDevice();
-            if (success)
-            {
-                var data = await serv.ExecuteDataRequest();
-            }
-            */
-            SyncService = new ForegroundSyncService(PreviousGuid.ToString(), "SensorName", shimmer.Models.CommunicationState.CommunicationMode.ForceDataTransferSync);
-            SyncService.ShimmerBLEEvent += ShimmerDevice_BLEEvent;
-            bool success = await SyncService.GetKnownDevice();
-            if (success)
-            {
-                var data = await SyncService.ExecuteStreamRequest();
+            
+            var data = await SyncService.ExecuteStreamRequest();
 
-            }
         }
 
+        protected async void StopStream()
+        {
+            SyncService.SendStopStreamRequestCommandOnMainThread();
+        }
         protected async void TestSpeed()
         {
             SpeedTestService serv = new SpeedTestService(PreviousGuid.ToString());
@@ -594,12 +618,8 @@ namespace BLE.Client.ViewModels
             await serv.GetKnownDevice();
             if (serv.ConnectedASM != null)
             {
-                while (true)
-                {
-                    System.Console.WriteLine("Memory Lookup Execution");
-                    await serv.ExecuteMemoryLookupTableCommand();
-                    await Task.Delay(60000);
-                }
+                System.Console.WriteLine("Memory Lookup Execution");
+                await serv.ExecuteMemoryLookupTableCommand();
             }
             else
             {
@@ -620,7 +640,19 @@ namespace BLE.Client.ViewModels
             }
             get { return displayText; }
         }
-
+        string deviceState = "Device State: Unknown";
+        public string DeviceState
+        {
+            protected set
+            {
+                if (deviceState != value)
+                {
+                    deviceState = value;
+                    RaisePropertyChanged();
+                }
+            }
+            get { return deviceState; }
+        }
         public void OnCompleted()
         {
             throw new NotImplementedException();
