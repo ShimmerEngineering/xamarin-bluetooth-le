@@ -132,6 +132,15 @@
                         <Button Text="ReadStatus"
                             Command="{Binding ReadStatusCommand}"
                             HorizontalOptions="End" />
+                        <Button Text="ReadProdConf"
+                            Command="{Binding ReadProdConfCommand}"
+                            HorizontalOptions="End" />
+                        <Button Text="ReadOpConf"
+                            Command="{Binding ReadOpConfCommand}"
+                            HorizontalOptions="End" />
+                        <Button Text="WriteTime"
+                            Command="{Binding WriteTimeCommand}"
+                            HorizontalOptions="End" />
                         <Button Text="Data Sync"
                                 Command="{Binding DownloadDataCommand}"
                                 HorizontalOptions="End" />

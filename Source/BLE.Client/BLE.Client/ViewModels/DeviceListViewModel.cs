@@ -54,6 +54,9 @@ namespace BLE.Client.ViewModels
         public MvxCommand ConnectCommand => new MvxCommand(() => Connect());
         public MvxCommand DisconnectVRECommand => new MvxCommand(() => Disconnect());
         public MvxCommand ReadStatusCommand => new MvxCommand(() => ReadStatus());
+        public MvxCommand ReadProdConfCommand => new MvxCommand(() => ReadProdConf());
+        public MvxCommand ReadOpConfCommand => new MvxCommand(() => ReadOpConf());
+        public MvxCommand WriteTimeCommand => new MvxCommand(() => WriteTime());
         public MvxCommand DownloadDataCommand => new MvxCommand(() => DownloadData());
         public MvxCommand StreamDataCommand => new MvxCommand(() => StreamData());
         public MvxCommand StopStreamCommand => new MvxCommand(() => StopStream());
@@ -574,7 +577,7 @@ namespace BLE.Client.ViewModels
             }
             SyncService = new ForegroundSyncService(PreviousGuid.ToString(), "SensorName", shimmer.Models.CommunicationState.CommunicationMode.ForceDataTransferSync);
             SyncService.ShimmerBLEEvent += ShimmerDevice_BLEEvent;
-            SyncService.Connect();
+            SyncService.Connect(true);
 
         }
         protected async void Disconnect()
@@ -586,6 +589,22 @@ namespace BLE.Client.ViewModels
             SyncService.ExecuteRequest(RequestType.Status);
         }
 
+        protected async void ReadProdConf()
+        {
+            SyncService.ExecuteRequest(RequestType.ProductionConfig);
+        }
+
+        protected async void ReadOpConf()
+        {
+            SyncService.ExecuteRequest(RequestType.OperationalConfigRead);
+        }
+
+
+        protected async void WriteTime()
+        {
+            SyncService.ExecuteRequest(RequestType.RTCWrite);
+        }
+    
         protected async void DownloadData()
         {
             /*
