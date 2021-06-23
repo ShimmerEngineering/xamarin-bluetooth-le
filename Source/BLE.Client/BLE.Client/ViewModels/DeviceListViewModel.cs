@@ -23,6 +23,7 @@ using ShimmerAPI;
 using shimmer.Sensors;
 using static shimmer.Models.ShimmerBLEEventData;
 using shimmer.Communications;
+using ShimmerBLEAPI.Communications;
 
 namespace BLE.Client.ViewModels
 {
@@ -60,6 +61,7 @@ namespace BLE.Client.ViewModels
         public MvxCommand DownloadDataCommand => new MvxCommand(() => DownloadData());
         public MvxCommand StreamDataCommand => new MvxCommand(() => StreamData());
         public MvxCommand StopStreamCommand => new MvxCommand(() => StopStream());
+        public MvxCommand PairCommand => new MvxCommand(() => PairDev());
         public ObservableCollection<DeviceListItemViewModel> Devices { get; set; } = new ObservableCollection<DeviceListItemViewModel>();
         public bool IsRefreshing => (Adapter != null) ? Adapter.IsScanning : false;
         public bool IsStateOn => _bluetoothLe.IsOn;
@@ -630,6 +632,11 @@ namespace BLE.Client.ViewModels
 
         }
 
+        protected async void PairDev()
+        {
+            var service = DependencyService.Get<IVerisenseBLEPairing>();
+            service.BondASMAutomatically("");
+        }
         protected async void StopStream()
         {
             SyncService.SendStopStreamRequestCommandOnMainThread();

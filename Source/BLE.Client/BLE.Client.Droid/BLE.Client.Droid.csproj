@@ -94,6 +94,10 @@
     <AndroidResource Include="Resources\drawable-xxhdpi\icon.png" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\ShimmerCSharpBLEAPI\ShimmerBLEAPI.Android\ShimmerBLEAPI.Android.csproj">
+      <Project>{4cb249ea-2f2f-4d20-a5e5-25185410d9a5}</Project>
+      <Name>ShimmerBLEAPI.Android</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\..\ShimmerCSharpBLEAPI\ShimmerBLEAPI\ShimmerBLEAPI.csproj">
       <Project>{deaa67d7-fcfb-4049-a377-66d551e87fb0}</Project>
       <Name>ShimmerBLEAPI</Name>

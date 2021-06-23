@@ -150,6 +150,9 @@
                         <Button Text="Stop Stream"
                             Command="{Binding StopStreamCommand}"
                             HorizontalOptions="End" />
+                        <Button Text="Pair"
+                            Command="{Binding PairCommand}"
+                            HorizontalOptions="End" />
                             <ActivityIndicator IsRunning="{Binding IsRefreshing}"
                                            IsVisible="{Binding IsRefreshing}"
                                            HeightRequest="24"

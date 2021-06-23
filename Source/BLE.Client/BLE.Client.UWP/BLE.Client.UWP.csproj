@@ -194,6 +194,10 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\ShimmerCSharpBLEAPI\ShimmerBLEAPI.UWP\ShimmerBLEAPI.UWP.csproj">
+      <Project>{ed119d8d-b96f-4622-a054-202333c9b09e}</Project>
+      <Name>ShimmerBLEAPI.UWP</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\..\ShimmerCSharpBLEAPI\ShimmerBLEAPI\ShimmerBLEAPI.csproj">
       <Project>{deaa67d7-fcfb-4049-a377-66d551e87fb0}</Project>
       <Name>ShimmerBLEAPI</Name>
