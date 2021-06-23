@@ -23,6 +23,7 @@ using ShimmerAPI;
 using static shimmer.Services.ForegroundSyncService;
 using shimmer.Sensors;
 using static shimmer.Models.ShimmerBLEEventData;
+using shimmer.Communications;
 
 namespace BLE.Client.ViewModels
 {
@@ -45,7 +46,7 @@ namespace BLE.Client.ViewModels
                 RaisePropertyChanged(() => ConnectToPreviousCommand);
             }
         }
-
+        DeviceManagerPluginBLE BLEManager;
         public MvxCommand RefreshCommand => new MvxCommand(() => TryStartScanning(true));
         public MvxCommand<DeviceListItemViewModel> DisconnectCommand => new MvxCommand<DeviceListItemViewModel>(DisconnectDevice);
 
@@ -117,6 +118,8 @@ namespace BLE.Client.ViewModels
             _userDialogs = userDialogs;
             _settings = settings;
             // quick and dirty :>
+            BLEManager = new DeviceManagerPluginBLE();
+
             _bluetoothLe.StateChanged += OnStateChanged;
             Adapter.DeviceDiscovered += OnDeviceDiscovered;
             Adapter.DeviceAdvertised += OnDeviceDiscovered;
@@ -124,6 +127,7 @@ namespace BLE.Client.ViewModels
             Adapter.DeviceDisconnected += OnDeviceDisconnected;
             Adapter.DeviceConnectionLost += OnDeviceConnectionLost;
             //Adapter.DeviceConnected += (sender, e) => Adapter.DisconnectDeviceAsync(e.Device);
+             
 
             Adapter.ScanMode = ScanMode.LowLatency;
         }
@@ -295,7 +299,8 @@ namespace BLE.Client.ViewModels
 
             await RaisePropertyChanged(() => IsRefreshing);
             Adapter.ScanMode = ScanMode.LowLatency;
-            await Adapter.StartScanningForDevicesAsync(_cancellationTokenSource.Token);
+            //await Adapter.StartScanningForDevicesAsync(_cancellationTokenSource.Token);
+            await BLEManager.StartScanForDevices();
         }
 
         private void CleanupCancellationToken()

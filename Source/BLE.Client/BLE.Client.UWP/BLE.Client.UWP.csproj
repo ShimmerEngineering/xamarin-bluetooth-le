@@ -194,9 +194,9 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\ShimmerCSharpBLEAPI\shimmer\shimmer.csproj">
-      <Project>{66bd5038-24cf-430d-8871-8d5f3baaab9a}</Project>
-      <Name>shimmer</Name>
+    <ProjectReference Include="..\..\..\..\ShimmerCSharpBLEAPI\ShimmerBLEAPI\ShimmerBLEAPI.csproj">
+      <Project>{deaa67d7-fcfb-4049-a377-66d551e87fb0}</Project>
+      <Name>ShimmerBLEAPI</Name>
     </ProjectReference>
     <ProjectReference Include="..\BLE.Client\BLE.Client.csproj">
       <Project>{dfe97be0-070b-43ad-bf37-50fd42b542d1}</Project>
