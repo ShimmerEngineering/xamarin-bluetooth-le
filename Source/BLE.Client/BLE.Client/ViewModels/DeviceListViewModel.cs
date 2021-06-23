@@ -20,7 +20,6 @@ using Xamarin.Forms;
 using shimmer.Services;
 using shimmer.Models;
 using ShimmerAPI;
-using static shimmer.Services.ForegroundSyncService;
 using shimmer.Sensors;
 using static shimmer.Models.ShimmerBLEEventData;
 using shimmer.Communications;
@@ -34,7 +33,7 @@ namespace BLE.Client.ViewModels
         private readonly ISettings _settings;
         private Guid _previousGuid;
         private CancellationTokenSource _cancellationTokenSource;
-        ForegroundSyncService SyncService;
+        VerisenseBLEDevice SyncService;
         public Guid PreviousGuid
         {
             get => _previousGuid;
@@ -580,7 +579,7 @@ namespace BLE.Client.ViewModels
             {
                 SyncService.ShimmerBLEEvent -= ShimmerDevice_BLEEvent;
             }
-            SyncService = new ForegroundSyncService(PreviousGuid.ToString(), "SensorName", shimmer.Models.CommunicationState.CommunicationMode.ForceDataTransferSync);
+            SyncService = new VerisenseBLEDevice(PreviousGuid.ToString(), "SensorName", shimmer.Models.CommunicationState.CommunicationMode.ForceDataTransferSync);
             SyncService.ShimmerBLEEvent += ShimmerDevice_BLEEvent;
             SyncService.Connect(true);
 
