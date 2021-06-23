@@ -18,9 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Shimmer-C-API\ShimmerAPI\ShimmerAPI\ShimmerAPI.csproj" />
     <ProjectReference Include="..\..\..\..\ShimmerCSharpBLEAPI\ShimmerBLEAPI\ShimmerBLEAPI.csproj" />
     <ProjectReference Include="..\..\MvvmCross.Plugins.BLE\MvvmCross.Plugins.BLE.csproj" />
-    <ProjectReference Include="D:\Documents\GitHub\Shimmer-C-API\ShimmerAPI\ShimmerAPI\ShimmerAPI.csproj" />
   </ItemGroup>
 
   <ItemGroup>
