@@ -24,6 +24,7 @@ using shimmer.Sensors;
 using static shimmer.Models.ShimmerBLEEventData;
 using shimmer.Communications;
 using ShimmerBLEAPI.Communications;
+using ShimmerBLEAPI.Devices;
 
 namespace BLE.Client.ViewModels
 {
@@ -301,7 +302,7 @@ namespace BLE.Client.ViewModels
             await RaisePropertyChanged(() => IsRefreshing);
             Adapter.ScanMode = ScanMode.LowLatency;
             //await Adapter.StartScanningForDevicesAsync(_cancellationTokenSource.Token);
-            await BLEManager.StartScanForDevices();
+            BLEManager.StartScanForDevices();
         }
 
         private void CleanupCancellationToken()
@@ -569,8 +570,8 @@ namespace BLE.Client.ViewModels
                 TransferSpeed = SyncService.dataFilePath + " : " + e.CurrentEvent.ToString();
             } else if (e.CurrentEvent == VerisenseBLEEvent.RequestResponse)
             {
-                if (e.ObjMsg is StatusPayload) {
-                    TransferSpeed = "Battery % =" + ((StatusPayload)e.ObjMsg).BatteryPercent + " UsbPowered =" + ((StatusPayload)e.ObjMsg).UsbPowered;
+                if ((RequestType)e.ObjMsg == RequestType.Status) {
+                    TransferSpeed = "Battery % =" + SyncService.GetStatus().BatteryPercent + " UsbPowered =" + SyncService.GetStatus().UsbPowered;
                 }
             }
         }
@@ -634,8 +635,9 @@ namespace BLE.Client.ViewModels
 
         protected async void PairDev()
         {
-            var service = DependencyService.Get<IVerisenseBLEPairing>();
-            service.BondASMAutomatically("");
+            //var service = DependencyService.Get<IVerisenseBLEPairing>();
+            var service = DependencyService.Get<IVerisenseBLEManager>();
+            service.PairVerisenseDevice("");
         }
         protected async void StopStream()
         {
