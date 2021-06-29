@@ -83,7 +83,7 @@
                            FontSize="Small"
                            TextColor="Gray"
                            VerticalTextAlignment="End" />
-                    <Label Text="{Binding TransferSpeed}"
+                    <Label Text="{Binding DeviceMessage}"
                            FontSize="Small"
                            TextColor="Gray"
                            VerticalTextAlignment="End" />

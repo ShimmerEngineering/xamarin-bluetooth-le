@@ -35,7 +35,7 @@ namespace BLE.Client.ViewModels
         private readonly ISettings _settings;
         private Guid _previousGuid;
         private CancellationTokenSource _cancellationTokenSource;
-        VerisenseBLEDevice SyncService;
+        VerisenseBLEDevice VerisenseBLEDevice;
         public Guid PreviousGuid
         {
             get => _previousGuid;
@@ -557,59 +557,65 @@ namespace BLE.Client.ViewModels
                 var a2y = ojc.GetData(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_ACC_Y, ShimmerConfiguration.SignalFormats.CAL);
                 var a2z = ojc.GetData(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_ACC_Z, ShimmerConfiguration.SignalFormats.CAL);
                 System.Console.WriteLine("New Data Packet: " + "  X : " +a2x.Data + "  Y : " + a2y.Data + "  Z : " + a2z.Data);
-                TransferSpeed = "New Data Packet: " + "  X : " + Math.Round(a2x.Data,2) + "  Y : " + Math.Round(a2y.Data,2) + "  Z : " + Math.Round(a2z.Data,2);
+                DeviceMessage = "New Data Packet: " + "  X : " + Math.Round(a2x.Data,2) + "  Y : " + Math.Round(a2y.Data,2) + "  Z : " + Math.Round(a2z.Data,2);
             } else if (e.CurrentEvent== VerisenseBLEEvent.StateChange)
             {
-                System.Console.WriteLine("SHIMMER DEVICE BLE EVENT: " + SyncService.GetBluetoothState().ToString());
-                DeviceState = "Device State: " + SyncService.GetBluetoothState().ToString();
+                System.Console.WriteLine("SHIMMER DEVICE BLE EVENT: " + VerisenseBLEDevice.GetBluetoothState().ToString());
+                DeviceState = "Device State: " + VerisenseBLEDevice.GetBluetoothState().ToString();
             } else if (e.CurrentEvent == VerisenseBLEEvent.SyncLoggedDataNewPayload)
             {
-                TransferSpeed = SyncService.dataFilePath + " : " + e.Message;
+                DeviceMessage = VerisenseBLEDevice.dataFilePath + " : " + e.Message;
             } else if (e.CurrentEvent == VerisenseBLEEvent.SyncLoggedDataComplete)
             {
-                TransferSpeed = SyncService.dataFilePath + " : " + e.CurrentEvent.ToString();
+                DeviceMessage = VerisenseBLEDevice.dataFilePath + " : " + e.CurrentEvent.ToString();
             } else if (e.CurrentEvent == VerisenseBLEEvent.RequestResponse)
             {
                 if ((RequestType)e.ObjMsg == RequestType.Status) {
-                    TransferSpeed = "Battery % =" + SyncService.GetStatus().BatteryPercent + " UsbPowered =" + SyncService.GetStatus().UsbPowered;
+                    DeviceMessage = "Battery % =" + VerisenseBLEDevice.GetStatus().BatteryPercent + " UsbPowered =" + VerisenseBLEDevice.GetStatus().UsbPowered;
+                } else if ((RequestType)e.ObjMsg == RequestType.ProductionConfig)
+                {
+                    DeviceMessage = "Hardware Version =v" + VerisenseBLEDevice.GetProductionConfig().REV_HW_MAJOR + "." + VerisenseBLEDevice.GetProductionConfig().REV_HW_MINOR + " Firmware Version =v" + VerisenseBLEDevice.GetProductionConfig().REV_FW_MAJOR + "." + VerisenseBLEDevice.GetProductionConfig().REV_FW_MINOR + "." + VerisenseBLEDevice.GetProductionConfig().REV_FW_INTERNAL;
+                } else if ((RequestType)e.ObjMsg == RequestType.OperationalConfigRead)
+                {
+                    DeviceMessage = "Operational Config Received";
                 }
             }
         }
 
         protected async void Connect()
         {
-            if (SyncService!=null)
+            if (VerisenseBLEDevice!=null)
             {
-                SyncService.ShimmerBLEEvent -= ShimmerDevice_BLEEvent;
+                VerisenseBLEDevice.ShimmerBLEEvent -= ShimmerDevice_BLEEvent;
             }
-            SyncService = new VerisenseBLEDevice(PreviousGuid.ToString(), "SensorName", shimmer.Models.CommunicationState.CommunicationMode.ForceDataTransferSync);
-            SyncService.ShimmerBLEEvent += ShimmerDevice_BLEEvent;
-            SyncService.Connect(false);
+            VerisenseBLEDevice = new VerisenseBLEDevice(PreviousGuid.ToString(), "SensorName", shimmer.Models.CommunicationState.CommunicationMode.ForceDataTransferSync);
+            VerisenseBLEDevice.ShimmerBLEEvent += ShimmerDevice_BLEEvent;
+            VerisenseBLEDevice.Connect(false);
 
         }
         protected async void Disconnect()
         {
-            SyncService.Disconnect();
+            VerisenseBLEDevice.Disconnect();
         }
         protected async void ReadStatus()
         {
-            SyncService.ExecuteRequest(RequestType.Status);
+            VerisenseBLEDevice.ExecuteRequest(RequestType.Status);
         }
 
         protected async void ReadProdConf()
         {
-            SyncService.ExecuteRequest(RequestType.ProductionConfig);
+            VerisenseBLEDevice.ExecuteRequest(RequestType.ProductionConfig);
         }
 
         protected async void ReadOpConf()
         {
-            SyncService.ExecuteRequest(RequestType.OperationalConfigRead);
+            VerisenseBLEDevice.ExecuteRequest(RequestType.OperationalConfigRead);
         }
 
 
         protected async void WriteTime()
         {
-            SyncService.ExecuteRequest(RequestType.RTCWrite);
+            VerisenseBLEDevice.ExecuteRequest(RequestType.RTCWrite);
         }
     
         protected async void DownloadData()
@@ -623,14 +629,14 @@ namespace BLE.Client.ViewModels
                 var data = await serv.ExecuteDataRequest();
             }
             */
-              var data = await SyncService.ExecuteDataRequest();
+              var data = await VerisenseBLEDevice.ExecuteDataRequest();
            
         }
         protected async void StreamData()
         {
 
             //var data = await SyncService.ExecuteStreamRequest();
-            var data = SyncService.ExecuteRequest(RequestType.StartStreaming);
+            var data = VerisenseBLEDevice.ExecuteRequest(RequestType.StartStreaming);
 
         }
 
@@ -643,7 +649,7 @@ namespace BLE.Client.ViewModels
         protected async void StopStream()
         {
             //SyncService.SendStopStreamRequestCommandOnMainThread();
-            var data = SyncService.ExecuteRequest(RequestType.StopStreaming);
+            var data = VerisenseBLEDevice.ExecuteRequest(RequestType.StopStreaming);
         }
         protected async void TestSpeed()
         {
@@ -662,7 +668,7 @@ namespace BLE.Client.ViewModels
         }
 
         string displayText = "1) Pair Verisense Sensor to PC first! 2) Scan, select sensor and choose copy GUID, 3) Start Speed Test or Data Sync";
-        public string TransferSpeed
+        public string DeviceMessage
         {
             protected set
             {
@@ -700,7 +706,7 @@ namespace BLE.Client.ViewModels
         public void OnNext(string value)
         {
             Trace.Message("Works" + value);
-            TransferSpeed = value;
+            DeviceMessage = value;
         }
     }
 }
