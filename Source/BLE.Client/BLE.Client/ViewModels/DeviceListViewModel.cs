@@ -584,7 +584,7 @@ namespace BLE.Client.ViewModels
             }
             SyncService = new VerisenseBLEDevice(PreviousGuid.ToString(), "SensorName", shimmer.Models.CommunicationState.CommunicationMode.ForceDataTransferSync);
             SyncService.ShimmerBLEEvent += ShimmerDevice_BLEEvent;
-            SyncService.Connect(true);
+            SyncService.Connect(false);
 
         }
         protected async void Disconnect()
@@ -628,8 +628,9 @@ namespace BLE.Client.ViewModels
         }
         protected async void StreamData()
         {
-            
-            var data = await SyncService.ExecuteStreamRequest();
+
+            //var data = await SyncService.ExecuteStreamRequest();
+            var data = SyncService.ExecuteRequest(RequestType.StartStreaming);
 
         }
 
@@ -641,7 +642,8 @@ namespace BLE.Client.ViewModels
         }
         protected async void StopStream()
         {
-            SyncService.SendStopStreamRequestCommandOnMainThread();
+            //SyncService.SendStopStreamRequestCommandOnMainThread();
+            var data = SyncService.ExecuteRequest(RequestType.StopStreaming);
         }
         protected async void TestSpeed()
         {
