@@ -108,7 +108,20 @@
                                 ItemsSource="{Binding ScanModes}"
                                 SelectedItem="{Binding SelectedScanMode, Mode=TwoWay}" />
                     </StackLayout>
+                    <StackLayout Orientation="Horizontal">
                         
+                        <Button Text="Configure"
+                                Command="{Binding ConfigureVerisenseDevice}"
+                                 />
+                        <Label Text="Logging : " />
+                        <CheckBox IsChecked="{Binding DeviceLogging}" />
+                        <Label Text="SensorAccel : " />
+                        <CheckBox IsChecked="{Binding SensorAccel}" />
+                        <Label Text="SensorAccel2 : " />
+                        <CheckBox IsChecked="{Binding SensorAccel2}" />
+                        <Label Text="SensorGyro : " />
+                        <CheckBox IsChecked="{Binding SensorGyro}" />
+                    </StackLayout>
                     <ScrollView Orientation="Horizontal">
                         <StackLayout Orientation="Horizontal">
                         <Button Text="Connect to previous"
@@ -152,6 +165,18 @@
                             HorizontalOptions="End" />
                         <Button Text="Pair"
                             Command="{Binding PairCommand}"
+                            HorizontalOptions="End" />
+                            <Button Text="Enable Acc"
+                            Command="{Binding EnableAcc}"
+                            HorizontalOptions="End" />
+                            <Button Text="Disable Acc"
+                            Command="{Binding DisableAcc}"
+                            HorizontalOptions="End" />
+                            <Button Text="Enable Acc2 Gyro"
+                            Command="{Binding EnableAcc2Gyro}"
+                            HorizontalOptions="End" />
+                        <Button Text="Disable Acc2 Gyro"
+                            Command="{Binding DisableAcc2Gyro}"
                             HorizontalOptions="End" />
                             <ActivityIndicator IsRunning="{Binding IsRefreshing}"
                                            IsVisible="{Binding IsRefreshing}"

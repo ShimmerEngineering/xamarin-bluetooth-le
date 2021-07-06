@@ -25,6 +25,7 @@ using static shimmer.Models.ShimmerBLEEventData;
 using shimmer.Communications;
 using ShimmerBLEAPI.Communications;
 using ShimmerBLEAPI.Devices;
+using System.IO;
 
 namespace BLE.Client.ViewModels
 {
@@ -36,6 +37,7 @@ namespace BLE.Client.ViewModels
         private Guid _previousGuid;
         private CancellationTokenSource _cancellationTokenSource;
         VerisenseBLEDevice VerisenseBLEDevice;
+
         public Guid PreviousGuid
         {
             get => _previousGuid;
@@ -63,6 +65,13 @@ namespace BLE.Client.ViewModels
         public MvxCommand StreamDataCommand => new MvxCommand(() => StreamData());
         public MvxCommand StopStreamCommand => new MvxCommand(() => StopStream());
         public MvxCommand PairCommand => new MvxCommand(() => PairDev());
+        public MvxCommand EnableAcc2Gyro => new MvxCommand(() => EnableAccGyro());
+        public MvxCommand DisableAcc2Gyro => new MvxCommand(() => DisableAccGyro());
+        public MvxCommand EnableAcc => new MvxCommand(() => EnableAccel());
+        public MvxCommand DisableAcc => new MvxCommand(() => DisableAccel());
+        public MvxCommand ConfigureVerisenseDevice => new MvxCommand(() => ConfigureDevice());
+        
+
         public ObservableCollection<DeviceListItemViewModel> Devices { get; set; } = new ObservableCollection<DeviceListItemViewModel>();
         public bool IsRefreshing => (Adapter != null) ? Adapter.IsScanning : false;
         public bool IsStateOn => _bluetoothLe.IsOn;
@@ -96,6 +105,66 @@ namespace BLE.Client.ViewModels
             }
         }
 
+        bool _deviceLogging;
+        public bool DeviceLogging
+        {
+            get => _deviceLogging;
+
+            set
+            {
+                if (_deviceLogging == value)
+                    return;
+
+                _deviceLogging = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        bool _AccelEnabled;
+        public bool SensorAccel
+        {
+            get => _AccelEnabled;
+
+            set
+            {
+                if (_AccelEnabled == value)
+                    return;
+
+                _AccelEnabled = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        bool _Accel2Enabled;
+        public bool SensorAccel2
+        {
+            get => _Accel2Enabled;
+
+            set
+            {
+                if (_Accel2Enabled == value)
+                    return;
+
+                _Accel2Enabled = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        bool _GyroEnabled;
+        public bool SensorGyro
+        {
+            get => _GyroEnabled;
+
+            set
+            {
+                if (_GyroEnabled == value)
+                    return;
+
+                _GyroEnabled = value;
+                RaisePropertyChanged();
+            }
+        }
+
         public MvxCommand StopScanCommand => new MvxCommand(() =>
         {
             _cancellationTokenSource.Cancel();
@@ -112,7 +181,7 @@ namespace BLE.Client.ViewModels
             get => Adapter.ScanMode;
             set => Adapter.ScanMode = value;
         }
-
+        Logging Logging;
         public DeviceListViewModel(IBluetoothLE bluetoothLe, IAdapter adapter, IUserDialogs userDialogs, ISettings settings, IPermissions permissions) : base(adapter)
         {
             _permissions = permissions;
@@ -132,8 +201,13 @@ namespace BLE.Client.ViewModels
              
 
             Adapter.ScanMode = ScanMode.LowLatency;
-        }
 
+        }
+        void OnCheckBoxCheckedChanged(object sender, CheckedChangedEventArgs e)
+        {
+            // Perform required operation after examining e.Value
+            System.Console.WriteLine();
+        }
         private Task GetPreviousGuidAsync()
         {
             return Task.Run(() =>
@@ -553,15 +627,69 @@ namespace BLE.Client.ViewModels
             if (e.CurrentEvent == VerisenseBLEEvent.NewDataPacket)
             {
                 ObjectCluster ojc = ((ObjectCluster)e.ObjMsg);
-                var a2x = ojc.GetData(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_ACC_X, ShimmerConfiguration.SignalFormats.CAL);
-                var a2y = ojc.GetData(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_ACC_Y, ShimmerConfiguration.SignalFormats.CAL);
-                var a2z = ojc.GetData(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_ACC_Z, ShimmerConfiguration.SignalFormats.CAL);
-                System.Console.WriteLine("New Data Packet: " + "  X : " +a2x.Data + "  Y : " + a2y.Data + "  Z : " + a2z.Data);
-                DeviceMessage = "New Data Packet: " + "  X : " + Math.Round(a2x.Data,2) + "  Y : " + Math.Round(a2y.Data,2) + "  Z : " + Math.Round(a2z.Data,2);
+                if (ojc.GetNames().Contains(SensorLIS2DW12.ObjectClusterSensorName.LIS2DW12_ACC_X))
+                {
+                    if (Logging == null)
+                    {
+                        var folder = Path.Combine(DependencyService.Get<ILocalFolderService>().GetBinFileDirectory());
+                        if (!Directory.Exists(folder))
+                        {
+                            Directory.CreateDirectory(folder);
+                        }
+                        DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                        double time = (DateTime.UtcNow - UnixEpoch).TotalMilliseconds;
+                        Logging = new Logging(Path.Combine(folder, time.ToString() + "SensorLIS2DW12.csv"), ",");
+                    }
+                    Logging.WriteData(ojc);
+                    var a2x = ojc.GetData(SensorLIS2DW12.ObjectClusterSensorName.LIS2DW12_ACC_X, ShimmerConfiguration.SignalFormats.CAL);
+                    var a2y = ojc.GetData(SensorLIS2DW12.ObjectClusterSensorName.LIS2DW12_ACC_Y, ShimmerConfiguration.SignalFormats.CAL);
+                    var a2z = ojc.GetData(SensorLIS2DW12.ObjectClusterSensorName.LIS2DW12_ACC_Z, ShimmerConfiguration.SignalFormats.CAL);
+                    System.Console.WriteLine("New Data Packet: " + "  X : " + a2x.Data + "  Y : " + a2y.Data + "  Z : " + a2z.Data);
+                    DeviceMessage = SensorLIS2DW12.SensorName + " New Data Packet: " + "  X : " + Math.Round(a2x.Data, 2) + "  Y : " + Math.Round(a2y.Data, 2) + "  Z : " + Math.Round(a2z.Data, 2);
+                }
+                if (ojc.GetNames().Contains(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_ACC_X)
+                    || ojc.GetNames().Contains(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_GYRO_X))
+                {
+                    if (Logging == null)
+                    {
+                        var folder = Path.Combine(DependencyService.Get<ILocalFolderService>().GetBinFileDirectory());
+                        if (!Directory.Exists(folder))
+                        {
+                            Directory.CreateDirectory(folder);
+                        }
+                        DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                        double time = (DateTime.UtcNow - UnixEpoch).TotalMilliseconds;
+                        Logging = new Logging(Path.Combine(folder, time.ToString() + "SensorLIS2DW12.csv"), ",");
+                    }
+
+                    Logging.WriteData(ojc);
+                    DeviceMessage = SensorLIS2DW12.SensorName + " New Data Packet: ";
+                    if (ojc.GetNames().Contains(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_ACC_X)){
+                        var a2x = ojc.GetData(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_ACC_X, ShimmerConfiguration.SignalFormats.CAL);
+                        var a2y = ojc.GetData(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_ACC_Y, ShimmerConfiguration.SignalFormats.CAL);
+                        var a2z = ojc.GetData(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_ACC_Z, ShimmerConfiguration.SignalFormats.CAL);
+                        System.Console.WriteLine("New Data Packet: " + "  X : " + a2x.Data + "  Y : " + a2y.Data + "  Z : " + a2z.Data);
+                        DeviceMessage = " ; ACCEL =  X : " + Math.Round(a2x.Data, 2) + "  Y : " + Math.Round(a2y.Data, 2) + "  Z : " + Math.Round(a2z.Data, 2);
+                    }
+                    if (ojc.GetNames().Contains(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_GYRO_X)){
+                        var g2x = ojc.GetData(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_GYRO_X, ShimmerConfiguration.SignalFormats.CAL);
+                        var g2y = ojc.GetData(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_GYRO_Y, ShimmerConfiguration.SignalFormats.CAL);
+                        var g2z = ojc.GetData(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_GYRO_Z, ShimmerConfiguration.SignalFormats.CAL);
+                        System.Console.WriteLine("New Data Packet: " + "  X : " + g2x.Data + "  Y : " + g2y.Data + "  Z : " + g2z.Data);
+                        DeviceMessage = DeviceMessage + " ; Gyro = X : " + Math.Round(g2x.Data, 2) + "  Y : " + Math.Round(g2y.Data, 2) + "  Z : " + Math.Round(g2z.Data, 2);
+                    }
+                }
             } else if (e.CurrentEvent== VerisenseBLEEvent.StateChange)
             {
-                System.Console.WriteLine("SHIMMER DEVICE BLE EVENT: " + VerisenseBLEDevice.GetBluetoothState().ToString());
-                DeviceState = "Device State: " + VerisenseBLEDevice.GetBluetoothState().ToString();
+                System.Console.WriteLine("SHIMMER DEVICE BLE EVENT: " + VerisenseBLEDevice.GetVerisenseBLEState().ToString());
+                DeviceState = "Device State: " + VerisenseBLEDevice.GetVerisenseBLEState().ToString();
+                if (VerisenseBLEDevice.GetVerisenseBLEState().Equals(ShimmerDeviceBluetoothState.Connected))
+                {
+                    DeviceLogging = VerisenseBLEDevice.isLoggingEnabled();
+                    SensorAccel = ((SensorLIS2DW12)VerisenseBLEDevice.GetSensor(SensorLIS2DW12.SensorName)).IsAccelEnabled();
+                    SensorAccel2 = ((SensorLSM6DS3)VerisenseBLEDevice.GetSensor(SensorLSM6DS3.SensorName)).IsAccelEnabled();
+                    SensorGyro = ((SensorLSM6DS3)VerisenseBLEDevice.GetSensor(SensorLSM6DS3.SensorName)).IsGyroEnabled();
+                }
             } else if (e.CurrentEvent == VerisenseBLEEvent.SyncLoggedDataNewPayload)
             {
                 DeviceMessage = VerisenseBLEDevice.dataFilePath + " : " + e.Message;
@@ -590,7 +718,7 @@ namespace BLE.Client.ViewModels
             }
             VerisenseBLEDevice = new VerisenseBLEDevice(PreviousGuid.ToString(), "SensorName", shimmer.Models.CommunicationState.CommunicationMode.ForceDataTransferSync);
             VerisenseBLEDevice.ShimmerBLEEvent += ShimmerDevice_BLEEvent;
-            VerisenseBLEDevice.Connect(false);
+            VerisenseBLEDevice.Connect(true);
 
         }
         protected async void Disconnect()
@@ -617,7 +745,83 @@ namespace BLE.Client.ViewModels
         {
             VerisenseBLEDevice.ExecuteRequest(RequestType.RTCWrite);
         }
-    
+        protected async void ConfigureDevice()
+        {
+            var clone = new VerisenseBLEDevice(VerisenseBLEDevice);
+            clone.setLoggingEnabled(_deviceLogging);
+            if (SensorAccel)
+            {
+                ((SensorLIS2DW12)clone.GetSensor(SensorLIS2DW12.SensorName)).SetAccelEnabled(true);
+            } else
+            {
+                ((SensorLIS2DW12)clone.GetSensor(SensorLIS2DW12.SensorName)).SetAccelEnabled(false);
+            }
+            if (SensorAccel2)
+            {
+                ((SensorLSM6DS3)clone.GetSensor(SensorLSM6DS3.SensorName)).SetAccelEnabled(true);
+            } else
+            {
+                ((SensorLSM6DS3)clone.GetSensor(SensorLSM6DS3.SensorName)).SetAccelEnabled(false);
+            }
+            if (SensorGyro)
+            {
+                ((SensorLSM6DS3)clone.GetSensor(SensorLSM6DS3.SensorName)).SetGyroEnabled(true);
+            } else
+            {
+                ((SensorLSM6DS3)clone.GetSensor(SensorLSM6DS3.SensorName)).SetGyroEnabled(true);
+            }
+            var opconfigbytes = clone.GenerateConfigurationBytes();
+            var compare = VerisenseBLEDevice.GetOperationalConfigByteArray(); //make sure the byte values havent changed
+            VerisenseBLEDevice.ExecuteRequest(RequestType.OperationalConfigWrite, opconfigbytes);
+        }
+        protected async void EnableAccGyro()
+        {
+            var clone = new VerisenseBLEDevice(VerisenseBLEDevice);
+            var sensor = clone.GetSensor("Accel2");
+            ((SensorLSM6DS3)sensor).SetAccelEnabled(true);
+            ((SensorLSM6DS3)sensor).SetGyroEnabled(true);
+            //((SensorLIS2DW12)sensor).Enabled = false;
+            var opconfigbytes = clone.GenerateConfigurationBytes();
+            var compare = VerisenseBLEDevice.GetOperationalConfigByteArray(); //make sure the byte values havent changed
+            VerisenseBLEDevice.ExecuteRequest(RequestType.OperationalConfigWrite, opconfigbytes);
+        }
+  
+        protected async void DisableAccGyro()
+        {
+            var clone = new VerisenseBLEDevice(VerisenseBLEDevice);
+            var sensor = clone.GetSensor("Accel2");
+            ((SensorLSM6DS3)sensor).SetAccelEnabled(false);
+            ((SensorLSM6DS3)sensor).SetGyroEnabled(false);
+            //((SensorLIS2DW12)sensor).Enabled = false;
+            var opconfigbytes = clone.GenerateConfigurationBytes();
+            var compare = VerisenseBLEDevice.GetOperationalConfigByteArray(); //make sure the byte values havent changed
+            VerisenseBLEDevice.ExecuteRequest(RequestType.OperationalConfigWrite, opconfigbytes);
+        }
+
+        protected async void EnableAccel()
+        {
+            var clone = new VerisenseBLEDevice(VerisenseBLEDevice);
+            var sensor = clone.GetSensor("Accel1");
+            //((SensorLSM6DS3)sensor).Gyro_Enabled = true;
+            //((SensorLSM6DS3)sensor).Accel2_Enabled = true;
+            ((SensorLIS2DW12)sensor).SetAccelEnabled(true);
+            var opconfigbytes = clone.GenerateConfigurationBytes();
+            var compare = VerisenseBLEDevice.GetOperationalConfigByteArray(); //make sure the byte values havent changed
+            VerisenseBLEDevice.ExecuteRequest(RequestType.OperationalConfigWrite, opconfigbytes);
+        }
+
+        protected async void DisableAccel()
+        {
+            var clone = new VerisenseBLEDevice(VerisenseBLEDevice);
+            var sensor = clone.GetSensor("Accel1");
+            //(SensorLSM6DS3)sensor).Gyro_Enabled = false;
+            //((SensorLSM6DS3)sensor).Accel2_Enabled = false;
+            ((SensorLIS2DW12)sensor).SetAccelEnabled(false);
+            var opconfigbytes = clone.GenerateConfigurationBytes();
+            var compare = VerisenseBLEDevice.GetOperationalConfigByteArray(); //make sure the byte values havent changed
+            VerisenseBLEDevice.ExecuteRequest(RequestType.OperationalConfigWrite, opconfigbytes);
+        }
+
         protected async void DownloadData()
         {
             /*
@@ -629,7 +833,7 @@ namespace BLE.Client.ViewModels
                 var data = await serv.ExecuteDataRequest();
             }
             */
-              var data = await VerisenseBLEDevice.ExecuteDataRequest();
+            var data = await VerisenseBLEDevice.ExecuteRequest(RequestType.DataSync);
            
         }
         protected async void StreamData()
@@ -650,6 +854,11 @@ namespace BLE.Client.ViewModels
         {
             //SyncService.SendStopStreamRequestCommandOnMainThread();
             var data = VerisenseBLEDevice.ExecuteRequest(RequestType.StopStreaming);
+            if (Logging != null)
+            {
+                Logging.CloseFile();
+            }
+            Logging = null;
         }
         protected async void TestSpeed()
         {
