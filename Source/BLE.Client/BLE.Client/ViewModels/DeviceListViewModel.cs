@@ -26,6 +26,8 @@ using shimmer.Communications;
 using ShimmerBLEAPI.Communications;
 using ShimmerBLEAPI.Devices;
 using System.IO;
+using ShimmerBLEAPI.Utility;
+using System.ComponentModel;
 
 namespace BLE.Client.ViewModels
 {
@@ -165,6 +167,21 @@ namespace BLE.Client.ViewModels
             }
         }
 
+        
+        bool _LogToFile = false;
+        public bool LogToFile
+        {
+            get => _LogToFile;
+
+            set
+            {
+                if (_LogToFile == value)
+                    return;
+
+                _LogToFile = value;
+                RaisePropertyChanged();
+            }
+        }
         public MvxCommand StopScanCommand => new MvxCommand(() =>
         {
             _cancellationTokenSource.Cancel();
@@ -175,12 +192,151 @@ namespace BLE.Client.ViewModels
         readonly IPermissions _permissions;
 
         public List<ScanMode> ScanModes => Enum.GetValues(typeof(ScanMode)).Cast<ScanMode>().ToList();
+        public List<String> AccelRanges => SensorLIS2DW12.AccelRange.Settings.Select(setting => setting.GetDisplayName()).ToList();
+        public List<String> AccelModes => SensorLIS2DW12.Mode.Settings.Select(setting => setting.GetDisplayName()).ToList();
+        public List<String> AccelLPModes => SensorLIS2DW12.LowPowerMode.Settings.Select(setting => setting.GetDisplayName()).ToList();
+
+        public List<String> accelRates = SensorLIS2DW12.LowPerformanceAccelSamplingRate.Settings.Select(setting => setting.GetDisplayName()).ToList();
+        public List<String> Accel2Ranges => SensorLSM6DS3.AccelRange.Settings.Select(setting => setting.GetDisplayName()).ToList();
+        public List<String> Accel2Rates => SensorLSM6DS3.AccelSamplingRate.Settings.Select(setting => setting.GetDisplayName()).ToList();
+        public List<String> GyroRanges => SensorLSM6DS3.GyroRange.Settings.Select(setting => setting.GetDisplayName()).ToList();
+        public List<String> GyroRates => SensorLSM6DS3.GyroSamplingRate.Settings.Select(setting => setting.GetDisplayName()).ToList();
+
+        public List<String> AccelRates
+        {
+            get => accelRates;
+            set
+            {
+                accelRates = value;
+                //RaisePropertyChanged();
+            }
+        }
+
 
         public ScanMode SelectedScanMode
         {
             get => Adapter.ScanMode;
             set => Adapter.ScanMode = value;
         }
+
+
+        Sensor.SensorSetting a2range = SensorLSM6DS3.AccelRange.Range_Unknown;
+        public String SelectedAccel2Range
+        {
+            get
+            {
+                return a2range.GetDisplayName();
+            }
+            set
+            {
+                a2range = Sensor.GetSensorSettingFromDisplayName(SensorLSM6DS3.AccelRange.Settings, value);
+                SensorDescription = a2range.GetDescription();
+                RaisePropertyChanged();
+            }
+        }
+
+        Sensor.SensorSetting a2rate = SensorLSM6DS3.AccelSamplingRate.Rate_Unknown;
+        public String SelectedAccel2Rate
+        {
+            get
+            {
+                return a2rate.GetDisplayName();
+            }
+            set
+            {
+                a2rate = Sensor.GetSensorSettingFromDisplayName(SensorLSM6DS3.AccelSamplingRate.Settings, value);
+                SensorDescription = a2rate.GetDescription();
+                RaisePropertyChanged();
+            }
+        }
+        Sensor.SensorSetting grange = SensorLSM6DS3.GyroRange.Range_Unknown;
+        public String SelectedGyroRange
+        {
+            get
+            {
+                return grange.GetDisplayName();
+            }
+            set
+            {
+                grange = Sensor.GetSensorSettingFromDisplayName(SensorLSM6DS3.GyroRange.Settings, value);
+                SensorDescription = grange.GetDescription();
+                RaisePropertyChanged();
+            }
+        }
+
+        Sensor.SensorSetting grate = SensorLSM6DS3.GyroSamplingRate.Rate_Unknown;
+        public String SelectedGyroRate
+        {
+            get
+            {
+                return grate.GetDisplayName();
+            }
+            set
+            {
+                grate = Sensor.GetSensorSettingFromDisplayName(SensorLSM6DS3.GyroSamplingRate.Settings, value);
+                SensorDescription = grate.GetDescription();
+                RaisePropertyChanged();
+            }
+        }
+
+        Sensor.SensorSetting arange = SensorLIS2DW12.AccelRange.Range_Unknown;
+        public String SelectedAccelRange
+        {
+            get {
+                return arange.GetDisplayName();
+            }
+            set {
+                arange = Sensor.GetSensorSettingFromDisplayName(SensorLIS2DW12.AccelRange.Settings,value);
+                SensorDescription = arange.GetDescription();
+                RaisePropertyChanged();
+            }
+        }
+
+        Sensor.SensorSetting arate = SensorLIS2DW12.LowPerformanceAccelSamplingRate.Rate_Unknown;
+        public String SelectedAccelRate
+        {
+            get
+            {
+                return arate.GetDisplayName();
+            }
+            set
+            {
+                arate = Sensor.GetSensorSettingFromDisplayName(SensorLIS2DW12.LowPerformanceAccelSamplingRate.Settings, value);
+                SensorDescription = arate.GetDescription();
+                RaisePropertyChanged();
+            }
+        }
+
+        Sensor.SensorSetting amode = SensorLIS2DW12.Mode.Mode_Unknown;
+        public String SelectedAccelMode
+        {
+            get
+            {
+                return amode.GetDisplayName();
+            }
+            set
+            {
+                amode = Sensor.GetSensorSettingFromDisplayName(SensorLIS2DW12.Mode.Settings, value);
+                SensorDescription = amode.GetDescription();
+                RaisePropertyChanged();
+            }
+        }
+
+        Sensor.SensorSetting lpmode = SensorLIS2DW12.LowPowerMode.Mode_Unknown;
+        public String SelectedAccelLPMode
+        {
+            get
+            {
+                return lpmode.GetDisplayName();
+            }
+            set
+            {
+                lpmode = Sensor.GetSensorSettingFromDisplayName(SensorLIS2DW12.LowPowerMode.Settings, value);
+                SensorDescription = lpmode.GetDescription();
+                RaisePropertyChanged();
+            }
+        }
+
         Logging Logging;
         public DeviceListViewModel(IBluetoothLE bluetoothLe, IAdapter adapter, IUserDialogs userDialogs, ISettings settings, IPermissions permissions) : base(adapter)
         {
@@ -629,7 +785,7 @@ namespace BLE.Client.ViewModels
                 ObjectCluster ojc = ((ObjectCluster)e.ObjMsg);
                 if (ojc.GetNames().Contains(SensorLIS2DW12.ObjectClusterSensorName.LIS2DW12_ACC_X))
                 {
-                    if (Logging == null)
+                    if (Logging == null && _LogToFile)
                     {
                         var folder = Path.Combine(DependencyService.Get<ILocalFolderService>().GetBinFileDirectory());
                         if (!Directory.Exists(folder))
@@ -640,7 +796,10 @@ namespace BLE.Client.ViewModels
                         double time = (DateTime.UtcNow - UnixEpoch).TotalMilliseconds;
                         Logging = new Logging(Path.Combine(folder, time.ToString() + "SensorLIS2DW12.csv"), ",");
                     }
-                    Logging.WriteData(ojc);
+                    if (_LogToFile)
+                    {
+                        Logging.WriteData(ojc);
+                    }
                     var a2x = ojc.GetData(SensorLIS2DW12.ObjectClusterSensorName.LIS2DW12_ACC_X, ShimmerConfiguration.SignalFormats.CAL);
                     var a2y = ojc.GetData(SensorLIS2DW12.ObjectClusterSensorName.LIS2DW12_ACC_Y, ShimmerConfiguration.SignalFormats.CAL);
                     var a2z = ojc.GetData(SensorLIS2DW12.ObjectClusterSensorName.LIS2DW12_ACC_Z, ShimmerConfiguration.SignalFormats.CAL);
@@ -650,7 +809,7 @@ namespace BLE.Client.ViewModels
                 if (ojc.GetNames().Contains(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_ACC_X)
                     || ojc.GetNames().Contains(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_GYRO_X))
                 {
-                    if (Logging == null)
+                    if (Logging == null && _LogToFile)
                     {
                         var folder = Path.Combine(DependencyService.Get<ILocalFolderService>().GetBinFileDirectory());
                         if (!Directory.Exists(folder))
@@ -660,9 +819,13 @@ namespace BLE.Client.ViewModels
                         DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
                         double time = (DateTime.UtcNow - UnixEpoch).TotalMilliseconds;
                         Logging = new Logging(Path.Combine(folder, time.ToString() + "SensorLIS2DW12.csv"), ",");
+
                     }
 
-                    Logging.WriteData(ojc);
+                    if (_LogToFile)
+                    {
+                        Logging.WriteData(ojc);
+                    }
                     DeviceMessage = SensorLIS2DW12.SensorName + " New Data Packet: ";
                     if (ojc.GetNames().Contains(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_ACC_X)){
                         var a2x = ojc.GetData(SensorLSM6DS3.ObjectClusterSensorName.LSM6DS3_ACC_X, ShimmerConfiguration.SignalFormats.CAL);
@@ -689,6 +852,25 @@ namespace BLE.Client.ViewModels
                     SensorAccel = ((SensorLIS2DW12)VerisenseBLEDevice.GetSensor(SensorLIS2DW12.SensorName)).IsAccelEnabled();
                     SensorAccel2 = ((SensorLSM6DS3)VerisenseBLEDevice.GetSensor(SensorLSM6DS3.SensorName)).IsAccelEnabled();
                     SensorGyro = ((SensorLSM6DS3)VerisenseBLEDevice.GetSensor(SensorLSM6DS3.SensorName)).IsGyroEnabled();
+                    SelectedAccelRange = ((SensorLIS2DW12)VerisenseBLEDevice.GetSensor(SensorLIS2DW12.SensorName)).GetAccelRange().GetDisplayName();
+                    if (((SensorLIS2DW12)VerisenseBLEDevice.GetSensor(SensorLIS2DW12.SensorName)).GetMode().GetConfigurationValue() == SensorLIS2DW12.Mode.Low_Power_Mode.GetConfigurationValue())
+                    {
+                        //NOTE THIS UI UPDATE DOESNT WORK
+                        AccelRates = SensorLIS2DW12.LowPerformanceAccelSamplingRate.Settings.Select(setting => setting.GetDisplayName()).ToList();
+                    } else
+                    {
+                        //NOTE THIS UI UPDATE DOESNT WORK
+                        AccelRates = SensorLIS2DW12.HighPerformanceAccelSamplingRate.Settings.Select(setting => setting.GetDisplayName()).ToList();
+                    }
+                    SelectedAccelRate = ((SensorLIS2DW12)VerisenseBLEDevice.GetSensor(SensorLIS2DW12.SensorName)).GetAccelRate().GetDisplayName();
+                    SelectedAccelMode = ((SensorLIS2DW12)VerisenseBLEDevice.GetSensor(SensorLIS2DW12.SensorName)).GetMode().GetDisplayName();
+                    SelectedAccelLPMode = ((SensorLIS2DW12)VerisenseBLEDevice.GetSensor(SensorLIS2DW12.SensorName)).GetLowPowerMode().GetDisplayName();
+
+                    SelectedAccel2Range = ((SensorLSM6DS3)VerisenseBLEDevice.GetSensor(SensorLSM6DS3.SensorName)).GetAccelRange().GetDisplayName();
+                    SelectedAccel2Rate = ((SensorLSM6DS3)VerisenseBLEDevice.GetSensor(SensorLSM6DS3.SensorName)).GetAccelRate().GetDisplayName();
+                    SelectedGyroRange = ((SensorLSM6DS3)VerisenseBLEDevice.GetSensor(SensorLSM6DS3.SensorName)).GetGyroRange().GetDisplayName();
+                    SelectedGyroRate = ((SensorLSM6DS3)VerisenseBLEDevice.GetSensor(SensorLSM6DS3.SensorName)).GetGyroRate().GetDisplayName();
+
                 }
             } else if (e.CurrentEvent == VerisenseBLEEvent.SyncLoggedDataNewPayload)
             {
@@ -756,6 +938,8 @@ namespace BLE.Client.ViewModels
             {
                 ((SensorLIS2DW12)clone.GetSensor(SensorLIS2DW12.SensorName)).SetAccelEnabled(false);
             }
+            ((SensorLIS2DW12)clone.GetSensor(SensorLIS2DW12.SensorName)).SetAccelRange(arange);
+            ((SensorLIS2DW12)clone.GetSensor(SensorLIS2DW12.SensorName)).SetAccelRate(arate);
             if (SensorAccel2)
             {
                 ((SensorLSM6DS3)clone.GetSensor(SensorLSM6DS3.SensorName)).SetAccelEnabled(true);
@@ -770,6 +954,10 @@ namespace BLE.Client.ViewModels
             {
                 ((SensorLSM6DS3)clone.GetSensor(SensorLSM6DS3.SensorName)).SetGyroEnabled(true);
             }
+            ((SensorLSM6DS3)clone.GetSensor(SensorLSM6DS3.SensorName)).SetAccelRange(a2range);
+            ((SensorLSM6DS3)clone.GetSensor(SensorLSM6DS3.SensorName)).SetAccelRate(a2rate);
+            ((SensorLSM6DS3)clone.GetSensor(SensorLSM6DS3.SensorName)).SetGyroRange(grange);
+            ((SensorLSM6DS3)clone.GetSensor(SensorLSM6DS3.SensorName)).SetGyroRate(grate);
             var opconfigbytes = clone.GenerateConfigurationBytes();
             var compare = VerisenseBLEDevice.GetOperationalConfigByteArray(); //make sure the byte values havent changed
             VerisenseBLEDevice.ExecuteRequest(RequestType.OperationalConfigWrite, opconfigbytes);
@@ -876,7 +1064,7 @@ namespace BLE.Client.ViewModels
             }
         }
 
-        string displayText = "1) Pair Verisense Sensor to PC first! 2) Scan, select sensor and choose copy GUID, 3) Start Speed Test or Data Sync";
+        string displayText = "Device Messages";
         public string DeviceMessage
         {
             protected set
@@ -889,6 +1077,21 @@ namespace BLE.Client.ViewModels
             }
             get { return displayText; }
         }
+
+        string sensorDescription = "Sensor Description";
+        public string SensorDescription
+        {
+            protected set
+            {
+                if (sensorDescription != value)
+                {
+                    sensorDescription = value;
+                    RaisePropertyChanged();
+                }
+            }
+            get { return sensorDescription; }
+        }
+
         string deviceState = "Device State: Unknown";
         public string DeviceState
         {

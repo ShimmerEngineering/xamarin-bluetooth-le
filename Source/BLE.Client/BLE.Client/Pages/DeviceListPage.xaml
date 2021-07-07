@@ -75,18 +75,15 @@
 
                     <StackLayout Grid.Row="2" Orientation="Vertical">
                     <BoxView BackgroundColor="Gray" HeightRequest="1"/>
+                    <Label Text="1) Pair Verisense Sensor to PC first! 2) Scan, select sensor and choose copy GUID, 3) Start Speed Test or Data Sync"
+                           FontSize="Small"
+                           TextColor="Gray"
+                           VerticalTextAlignment="End" />
                     <Label Text="{Binding PreviousGuid, StringFormat='GUID {0}'}"
                            FontSize="Small"
                            TextColor="Gray"
                            VerticalTextAlignment="End" />
-                    <Label Text="{Binding DeviceState}"
-                           FontSize="Small"
-                           TextColor="Gray"
-                           VerticalTextAlignment="End" />
-                    <Label Text="{Binding DeviceMessage}"
-                           FontSize="Small"
-                           TextColor="Gray"
-                           VerticalTextAlignment="End" />
+                    <!--    
                     <StackLayout Orientation="Horizontal"
                                  HorizontalOptions="Fill">
                         <StackLayout.IsVisible>
@@ -108,31 +105,84 @@
                                 ItemsSource="{Binding ScanModes}"
                                 SelectedItem="{Binding SelectedScanMode, Mode=TwoWay}" />
                     </StackLayout>
-                    <StackLayout Orientation="Horizontal">
-                        
-                        <Button Text="Configure"
-                                Command="{Binding ConfigureVerisenseDevice}"
-                                 />
-                        <Label Text="Logging : " />
-                        <CheckBox IsChecked="{Binding DeviceLogging}" />
-                        <Label Text="SensorAccel : " />
-                        <CheckBox IsChecked="{Binding SensorAccel}" />
-                        <Label Text="SensorAccel2 : " />
-                        <CheckBox IsChecked="{Binding SensorAccel2}" />
-                        <Label Text="SensorGyro : " />
-                        <CheckBox IsChecked="{Binding SensorGyro}" />
+                    -->
+                    <ScrollView Orientation="Horizontal">
+                        <StackLayout Orientation="Horizontal">
+                            <Button Text="Start Scan"
+                                Command="{Binding RefreshCommand}"
+                                HorizontalOptions="End" />
+                            <Button Text="Stop Scan"
+                                Command="{Binding StopScanCommand}"
+                                HorizontalOptions="End" />
+                            <Button Text="Pair"
+                            Command="{Binding PairCommand}"
+                            HorizontalOptions="End" />
+                        </StackLayout>
+                    </ScrollView>
+                    <BoxView BackgroundColor="Gray" HeightRequest="1"/>
+                    <StackLayout Orientation="Vertical">
+                        <Label Text="{Binding DeviceState}"
+                           FontSize="Small"
+                           TextColor="Gray"
+                           VerticalTextAlignment="End" />
+                        <Label Text="{Binding DeviceMessage}"
+                           FontSize="Small"
+                           TextColor="Gray"
+                           VerticalTextAlignment="End" />
+                        <Label Text="{Binding SensorDescription}"
+                           FontSize="Micro"
+                           TextColor="Gray"
+                           VerticalTextAlignment="End" />
                     </StackLayout>
                     <ScrollView Orientation="Horizontal">
                         <StackLayout Orientation="Horizontal">
-                        <Button Text="Connect to previous"
-                                Command="{Binding ConnectToPreviousCommand}"
-                                HorizontalOptions="Start" />
-                        <Button Text="Start Scan"
-                                Command="{Binding RefreshCommand}"
-                                HorizontalOptions="End" />
-                        <Button Text="Stop Scan"
-                                Command="{Binding StopScanCommand}"
-                                HorizontalOptions="End" />
+                            <Button Text="Configure"
+                                Command="{Binding ConfigureVerisenseDevice}"
+                                 />
+                            <Label Text=" On Device Logging : " VerticalOptions="Start" />
+                            <CheckBox IsChecked="{Binding DeviceLogging}" VerticalOptions="Start" />
+                            <StackLayout Orientation="Vertical">
+                                <StackLayout Orientation="Horizontal">
+                                    <Label Text="SensorAccel : " />
+                                    <CheckBox IsChecked="{Binding SensorAccel}" />
+                                </StackLayout>
+                                <Picker ItemsSource="{Binding AccelRanges}"
+                                SelectedItem="{Binding SelectedAccelRange, Mode=TwoWay}" ></Picker>
+                                <Picker ItemsSource="{Binding AccelRates}"
+                                SelectedItem="{Binding SelectedAccelRate, Mode=TwoWay}" ></Picker>
+                                <Picker ItemsSource="{Binding AccelModes}"
+                                SelectedItem="{Binding SelectedAccelMode, Mode=TwoWay}" ></Picker>
+                                <Picker ItemsSource="{Binding AccelLPModes}"
+                                SelectedItem="{Binding SelectedAccelLPMode, Mode=TwoWay}" ></Picker>
+                            </StackLayout>
+                            <StackLayout Orientation="Vertical">
+                                <StackLayout Orientation="Horizontal">
+                                    <Label Text="SensorAccel2 : " />
+                                    <CheckBox IsChecked="{Binding SensorAccel2}" />
+                                </StackLayout>
+                                <Picker ItemsSource="{Binding Accel2Ranges}"
+                                SelectedItem="{Binding SelectedAccel2Range, Mode=TwoWay}" ></Picker>
+                                <Picker ItemsSource="{Binding Accel2Rates}"
+                                SelectedItem="{Binding SelectedAccel2Rate, Mode=TwoWay}" ></Picker>
+                            </StackLayout>
+                            <StackLayout Orientation="Vertical">
+                                <StackLayout Orientation="Horizontal">
+                                    <Label Text="SensorGyro : " />
+                                    <CheckBox IsChecked="{Binding SensorGyro}" />
+                                </StackLayout>
+                                <Picker ItemsSource="{Binding GyroRanges}"
+                                SelectedItem="{Binding SelectedGyroRange, Mode=TwoWay}" ></Picker>
+                                <Picker ItemsSource="{Binding GyroRates}"
+                                SelectedItem="{Binding SelectedGyroRate, Mode=TwoWay}" ></Picker>
+                            </StackLayout>
+                        </StackLayout>
+                    </ScrollView>
+                    <StackLayout Orientation="Horizontal">
+                        <Label Text="Log to file (when Streaming) : " />
+                        <CheckBox IsChecked="{Binding LogToFile}" />
+                    </StackLayout>
+                    <ScrollView Orientation="Horizontal">
+                        <StackLayout Orientation="Horizontal">
                         <Button Text="Speed Test"
                                 Command="{Binding TestSpeedCommand}"
                                 HorizontalOptions="End" />
@@ -163,21 +213,21 @@
                         <Button Text="Stop Stream"
                             Command="{Binding StopStreamCommand}"
                             HorizontalOptions="End" />
-                        <Button Text="Pair"
-                            Command="{Binding PairCommand}"
-                            HorizontalOptions="End" />
-                            <Button Text="Enable Acc"
+
+                            <!--
+                        <Button Text="Enable Acc"
                             Command="{Binding EnableAcc}"
                             HorizontalOptions="End" />
-                            <Button Text="Disable Acc"
+                        <Button Text="Disable Acc"
                             Command="{Binding DisableAcc}"
                             HorizontalOptions="End" />
-                            <Button Text="Enable Acc2 Gyro"
+                        <Button Text="Enable Acc2 Gyro"
                             Command="{Binding EnableAcc2Gyro}"
                             HorizontalOptions="End" />
                         <Button Text="Disable Acc2 Gyro"
                             Command="{Binding DisableAcc2Gyro}"
                             HorizontalOptions="End" />
+                            -->
                             <ActivityIndicator IsRunning="{Binding IsRefreshing}"
                                            IsVisible="{Binding IsRefreshing}"
                                            HeightRequest="24"
