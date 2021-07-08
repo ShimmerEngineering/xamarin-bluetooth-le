@@ -10,7 +10,6 @@ using MvvmCross.ViewModels;
 using Plugin.BLE.Abstractions;
 using Plugin.BLE.Abstractions.Contracts;
 using Plugin.BLE.Abstractions.EventArgs;
-using Plugin.BLE.Abstractions.Extensions;
 using Plugin.Permissions.Abstractions;
 using Plugin.Settings.Abstractions;
 using MvvmCross.Commands;
@@ -23,11 +22,13 @@ using ShimmerAPI;
 using shimmer.Sensors;
 using static shimmer.Models.ShimmerBLEEventData;
 using shimmer.Communications;
-using ShimmerBLEAPI.Communications;
 using ShimmerBLEAPI.Devices;
 using System.IO;
-using ShimmerBLEAPI.Utility;
-using System.ComponentModel;
+using SkiaSharp;
+using Microcharts;
+using Entry = Microcharts.ChartEntry;
+using BLE.Client.Pages;
+using System.Collections.Concurrent;
 
 namespace BLE.Client.ViewModels
 {
@@ -336,7 +337,7 @@ namespace BLE.Client.ViewModels
                 RaisePropertyChanged();
             }
         }
-
+        public Chart Chart { get; private set; }
         Logging Logging;
         public DeviceListViewModel(IBluetoothLE bluetoothLe, IAdapter adapter, IUserDialogs userDialogs, ISettings settings, IPermissions permissions) : base(adapter)
         {
@@ -358,7 +359,60 @@ namespace BLE.Client.ViewModels
 
             Adapter.ScanMode = ScanMode.LowLatency;
 
+
+            
+
+
         }
+        ConcurrentQueue<Entry> entriesX = new ConcurrentQueue<Entry>();
+        ConcurrentQueue<Entry> entriesY = new ConcurrentQueue<Entry>();
+        ConcurrentQueue<Entry> entriesZ = new ConcurrentQueue<Entry>();
+        void PlotData(double x, double y, double z)
+        {
+            if (entriesX.Count > 250 && Chart.IsAnimated)
+            {
+                Entry e;
+                entriesX.TryDequeue(out e);
+                entriesY.TryDequeue(out e);
+                entriesZ.TryDequeue(out e);
+            }
+            Entry entryX = new Entry((float)x);
+            Entry entryY = new Entry((float)y);
+            Entry entryZ = new Entry((float)z);
+            entriesX.Enqueue(entryX);
+            entriesY.Enqueue(entryY);
+            entriesZ.Enqueue(entryZ);
+            Chart = new LineChart {
+                LegendOption = SeriesLegendOption.Top,
+                Series = new List<ChartSerie>()
+                    {
+                        new ChartSerie()
+                        {
+                            Name = "X AXIS",
+                            Color = SKColor.Parse("#2c3e50"),
+                            Entries = entriesX,
+                        },
+                        new ChartSerie()
+                        {
+                            Name = "Y AXIS",
+                            Color = SKColor.Parse("#77d065"),
+                            Entries = entriesY,
+                        },
+                        new ChartSerie()
+                        {
+                            Name = "Z AXIS",
+                            Color = SKColor.Parse("#b455b6"),
+                            Entries = entriesZ,
+                        },
+                    }
+            };
+            ((LineChart)Chart).PointSize = 0;
+            Chart.MaxValue = 20;
+            Chart.MinValue = -20;
+            Chart.AnimationDuration = new TimeSpan(0);
+            RaisePropertyChanged(nameof(this.Chart));
+        }
+
         void OnCheckBoxCheckedChanged(object sender, CheckedChangedEventArgs e)
         {
             // Perform required operation after examining e.Value
@@ -803,6 +857,7 @@ namespace BLE.Client.ViewModels
                     var a2x = ojc.GetData(SensorLIS2DW12.ObjectClusterSensorName.LIS2DW12_ACC_X, ShimmerConfiguration.SignalFormats.CAL);
                     var a2y = ojc.GetData(SensorLIS2DW12.ObjectClusterSensorName.LIS2DW12_ACC_Y, ShimmerConfiguration.SignalFormats.CAL);
                     var a2z = ojc.GetData(SensorLIS2DW12.ObjectClusterSensorName.LIS2DW12_ACC_Z, ShimmerConfiguration.SignalFormats.CAL);
+                    PlotData(a2x.Data,a2y.Data,a2z.Data);
                     System.Console.WriteLine("New Data Packet: " + "  X : " + a2x.Data + "  Y : " + a2y.Data + "  Z : " + a2z.Data);
                     DeviceMessage = SensorLIS2DW12.SensorName + " New Data Packet: " + "  X : " + Math.Round(a2x.Data, 2) + "  Y : " + Math.Round(a2y.Data, 2) + "  Z : " + Math.Round(a2z.Data, 2);
                 }
@@ -846,8 +901,24 @@ namespace BLE.Client.ViewModels
             {
                 System.Console.WriteLine("SHIMMER DEVICE BLE EVENT: " + VerisenseBLEDevice.GetVerisenseBLEState().ToString());
                 DeviceState = "Device State: " + VerisenseBLEDevice.GetVerisenseBLEState().ToString();
-                if (VerisenseBLEDevice.GetVerisenseBLEState().Equals(ShimmerDeviceBluetoothState.Connected))
+                
+            } else if (e.CurrentEvent == VerisenseBLEEvent.SyncLoggedDataNewPayload)
+            {
+                DeviceMessage = VerisenseBLEDevice.dataFilePath + " : " + e.Message;
+            } else if (e.CurrentEvent == VerisenseBLEEvent.SyncLoggedDataComplete)
+            {
+                DeviceMessage = VerisenseBLEDevice.dataFilePath + " : " + e.CurrentEvent.ToString();
+            } else if (e.CurrentEvent == VerisenseBLEEvent.RequestResponse)
+            {
+                if ((RequestType)e.ObjMsg == RequestType.ReadStatus) {
+                    DeviceMessage = "Battery % =" + VerisenseBLEDevice.GetStatus().BatteryPercent + " UsbPowered =" + VerisenseBLEDevice.GetStatus().UsbPowered;
+                } else if ((RequestType)e.ObjMsg == RequestType.ReadProductionConfig)
                 {
+                    DeviceMessage = "Hardware Version =v" + VerisenseBLEDevice.GetProductionConfig().REV_HW_MAJOR + "." + VerisenseBLEDevice.GetProductionConfig().REV_HW_MINOR + " Firmware Version =v" + VerisenseBLEDevice.GetProductionConfig().REV_FW_MAJOR + "." + VerisenseBLEDevice.GetProductionConfig().REV_FW_MINOR + "." + VerisenseBLEDevice.GetProductionConfig().REV_FW_INTERNAL;
+                } else if ((RequestType)e.ObjMsg == RequestType.ReadOperationalConfig)
+                {
+                    DeviceMessage = "Operational Config Received";
+
                     DeviceLogging = VerisenseBLEDevice.isLoggingEnabled();
                     SensorAccel = ((SensorLIS2DW12)VerisenseBLEDevice.GetSensor(SensorLIS2DW12.SensorName)).IsAccelEnabled();
                     SensorAccel2 = ((SensorLSM6DS3)VerisenseBLEDevice.GetSensor(SensorLSM6DS3.SensorName)).IsAccelEnabled();
@@ -857,7 +928,8 @@ namespace BLE.Client.ViewModels
                     {
                         //NOTE THIS UI UPDATE DOESNT WORK
                         AccelRates = SensorLIS2DW12.LowPerformanceAccelSamplingRate.Settings.Select(setting => setting.GetDisplayName()).ToList();
-                    } else
+                    }
+                    else
                     {
                         //NOTE THIS UI UPDATE DOESNT WORK
                         AccelRates = SensorLIS2DW12.HighPerformanceAccelSamplingRate.Settings.Select(setting => setting.GetDisplayName()).ToList();
@@ -871,23 +943,7 @@ namespace BLE.Client.ViewModels
                     SelectedGyroRange = ((SensorLSM6DS3)VerisenseBLEDevice.GetSensor(SensorLSM6DS3.SensorName)).GetGyroRange().GetDisplayName();
                     SelectedGyroRate = ((SensorLSM6DS3)VerisenseBLEDevice.GetSensor(SensorLSM6DS3.SensorName)).GetGyroRate().GetDisplayName();
 
-                }
-            } else if (e.CurrentEvent == VerisenseBLEEvent.SyncLoggedDataNewPayload)
-            {
-                DeviceMessage = VerisenseBLEDevice.dataFilePath + " : " + e.Message;
-            } else if (e.CurrentEvent == VerisenseBLEEvent.SyncLoggedDataComplete)
-            {
-                DeviceMessage = VerisenseBLEDevice.dataFilePath + " : " + e.CurrentEvent.ToString();
-            } else if (e.CurrentEvent == VerisenseBLEEvent.RequestResponse)
-            {
-                if ((RequestType)e.ObjMsg == RequestType.Status) {
-                    DeviceMessage = "Battery % =" + VerisenseBLEDevice.GetStatus().BatteryPercent + " UsbPowered =" + VerisenseBLEDevice.GetStatus().UsbPowered;
-                } else if ((RequestType)e.ObjMsg == RequestType.ProductionConfig)
-                {
-                    DeviceMessage = "Hardware Version =v" + VerisenseBLEDevice.GetProductionConfig().REV_HW_MAJOR + "." + VerisenseBLEDevice.GetProductionConfig().REV_HW_MINOR + " Firmware Version =v" + VerisenseBLEDevice.GetProductionConfig().REV_FW_MAJOR + "." + VerisenseBLEDevice.GetProductionConfig().REV_FW_MINOR + "." + VerisenseBLEDevice.GetProductionConfig().REV_FW_INTERNAL;
-                } else if ((RequestType)e.ObjMsg == RequestType.OperationalConfigRead)
-                {
-                    DeviceMessage = "Operational Config Received";
+
                 }
             }
         }
@@ -909,23 +965,23 @@ namespace BLE.Client.ViewModels
         }
         protected async void ReadStatus()
         {
-            VerisenseBLEDevice.ExecuteRequest(RequestType.Status);
+            VerisenseBLEDevice.ExecuteRequest(RequestType.ReadStatus);
         }
 
         protected async void ReadProdConf()
         {
-            VerisenseBLEDevice.ExecuteRequest(RequestType.ProductionConfig);
+            VerisenseBLEDevice.ExecuteRequest(RequestType.ReadProductionConfig);
         }
 
         protected async void ReadOpConf()
         {
-            VerisenseBLEDevice.ExecuteRequest(RequestType.OperationalConfigRead);
+            VerisenseBLEDevice.ExecuteRequest(RequestType.ReadOperationalConfig);
         }
 
 
         protected async void WriteTime()
         {
-            VerisenseBLEDevice.ExecuteRequest(RequestType.RTCWrite);
+            VerisenseBLEDevice.ExecuteRequest(RequestType.WriteRTC);
         }
         protected async void ConfigureDevice()
         {
@@ -960,7 +1016,7 @@ namespace BLE.Client.ViewModels
             ((SensorLSM6DS3)clone.GetSensor(SensorLSM6DS3.SensorName)).SetGyroRate(grate);
             var opconfigbytes = clone.GenerateConfigurationBytes();
             var compare = VerisenseBLEDevice.GetOperationalConfigByteArray(); //make sure the byte values havent changed
-            VerisenseBLEDevice.ExecuteRequest(RequestType.OperationalConfigWrite, opconfigbytes);
+            VerisenseBLEDevice.WriteAndReadOperationalConfiguration(opconfigbytes);
         }
         protected async void EnableAccGyro()
         {
@@ -971,7 +1027,7 @@ namespace BLE.Client.ViewModels
             //((SensorLIS2DW12)sensor).Enabled = false;
             var opconfigbytes = clone.GenerateConfigurationBytes();
             var compare = VerisenseBLEDevice.GetOperationalConfigByteArray(); //make sure the byte values havent changed
-            VerisenseBLEDevice.ExecuteRequest(RequestType.OperationalConfigWrite, opconfigbytes);
+            VerisenseBLEDevice.ExecuteRequest(RequestType.WriteOperationalConfig, opconfigbytes);
         }
   
         protected async void DisableAccGyro()
@@ -983,7 +1039,7 @@ namespace BLE.Client.ViewModels
             //((SensorLIS2DW12)sensor).Enabled = false;
             var opconfigbytes = clone.GenerateConfigurationBytes();
             var compare = VerisenseBLEDevice.GetOperationalConfigByteArray(); //make sure the byte values havent changed
-            VerisenseBLEDevice.ExecuteRequest(RequestType.OperationalConfigWrite, opconfigbytes);
+            VerisenseBLEDevice.ExecuteRequest(RequestType.WriteOperationalConfig, opconfigbytes);
         }
 
         protected async void EnableAccel()
@@ -995,7 +1051,7 @@ namespace BLE.Client.ViewModels
             ((SensorLIS2DW12)sensor).SetAccelEnabled(true);
             var opconfigbytes = clone.GenerateConfigurationBytes();
             var compare = VerisenseBLEDevice.GetOperationalConfigByteArray(); //make sure the byte values havent changed
-            VerisenseBLEDevice.ExecuteRequest(RequestType.OperationalConfigWrite, opconfigbytes);
+            VerisenseBLEDevice.ExecuteRequest(RequestType.WriteOperationalConfig, opconfigbytes);
         }
 
         protected async void DisableAccel()
@@ -1007,7 +1063,7 @@ namespace BLE.Client.ViewModels
             ((SensorLIS2DW12)sensor).SetAccelEnabled(false);
             var opconfigbytes = clone.GenerateConfigurationBytes();
             var compare = VerisenseBLEDevice.GetOperationalConfigByteArray(); //make sure the byte values havent changed
-            VerisenseBLEDevice.ExecuteRequest(RequestType.OperationalConfigWrite, opconfigbytes);
+            VerisenseBLEDevice.ExecuteRequest(RequestType.WriteOperationalConfig, opconfigbytes);
         }
 
         protected async void DownloadData()
@@ -1021,7 +1077,7 @@ namespace BLE.Client.ViewModels
                 var data = await serv.ExecuteDataRequest();
             }
             */
-            var data = await VerisenseBLEDevice.ExecuteRequest(RequestType.DataSync);
+            var data = await VerisenseBLEDevice.ExecuteRequest(RequestType.TransferLoggedData);
            
         }
         protected async void StreamData()

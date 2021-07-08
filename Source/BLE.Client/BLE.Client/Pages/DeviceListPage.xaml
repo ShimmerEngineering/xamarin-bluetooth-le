@@ -3,7 +3,8 @@
                      xmlns="http://xamarin.com/schemas/2014/forms"
                      xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
                      xmlns:views="clr-namespace:MvvmCross.Forms.Views;assembly=MvvmCross.Forms"
-                     xmlns:viewModels="clr-namespace:BLE.Client.ViewModels;assembly=BLE.Client"
+                     xmlns:viewModels="clr-namespace:BLE.Client.ViewModels;assembly=BLE.Client" 
+                     xmlns:forms="clr-namespace:Microcharts.Forms;assembly=Microcharts.Forms"   
                      x:Class="BLE.Client.Pages.DeviceListPage"
                      Title="Discover devices"
                      x:Name="DevicePage">
@@ -240,11 +241,15 @@
                 </StackLayout>
             </Grid>
         </ContentPage>
-        <ContentPage Title="System devices">
+        <ContentPage Title="Plot">
+            <forms:ChartView x:Name="Chart1"  Chart="{Binding Chart}"
+                               HeightRequest="150"/>
+            <!--
             <ListView ItemsSource="{Binding SystemDevices}"
                       SelectedItem="{Binding SelectedDevice, Mode=TwoWay}"
                       RowHeight="80"
                       ItemTemplate="{StaticResource DeviceItemTemplate}" />
+            -->
         </ContentPage>
     </views:MvxTabbedPage.Children>
 
