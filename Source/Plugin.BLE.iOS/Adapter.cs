@@ -313,29 +313,29 @@ namespace Plugin.BLE.iOS
                 {
                     var array = (NSArray)advertisementData.ObjectForKey(key);
 
-                    for (nuint i = 0; i < array.Count; i++)
-                    {
-                        var cbuuid = array.GetItem<CBUUID>(i);
+                    //for (nuint i = 0; i < array.Count; i++)
+                    //{
+                    //    var cbuuid = array.GetItem<CBUUID>(i);
 
-                        switch (cbuuid.Data.Length)
-                        {
-                            case 16:
-                                // 128-bit UUID
-                                records.Add(new AdvertisementRecord(AdvertisementRecordType.UuidsComplete128Bit, cbuuid.Data.ToArray()));
-                                break;
-                            case 8:
-                                // 32-bit UUID
-                                records.Add(new AdvertisementRecord(AdvertisementRecordType.UuidCom32Bit, cbuuid.Data.ToArray()));
-                                break;
-                            case 2:
-                                // 16-bit UUID
-                                records.Add(new AdvertisementRecord(AdvertisementRecordType.UuidsComplete16Bit, cbuuid.Data.ToArray()));
-                                break;
-                            default:
-                                // Invalid data length for UUID
-                                break;
-                        }
-                    }
+                    //    switch (cbuuid.Data.Length)
+                    //    {
+                    //        case 16:
+                    //            // 128-bit UUID
+                    //            records.Add(new AdvertisementRecord(AdvertisementRecordType.UuidsComplete128Bit, cbuuid.Data.ToArray()));
+                    //            break;
+                    //        case 8:
+                    //            // 32-bit UUID
+                    //            records.Add(new AdvertisementRecord(AdvertisementRecordType.UuidCom32Bit, cbuuid.Data.ToArray()));
+                    //            break;
+                    //        case 2:
+                    //            // 16-bit UUID
+                    //            records.Add(new AdvertisementRecord(AdvertisementRecordType.UuidsComplete16Bit, cbuuid.Data.ToArray()));
+                    //            break;
+                    //        default:
+                    //            // Invalid data length for UUID
+                    //            break;
+                    //    }
+                    //}
                 }
                 else if (key == CBAdvertisement.DataTxPowerLevelKey)
                 {

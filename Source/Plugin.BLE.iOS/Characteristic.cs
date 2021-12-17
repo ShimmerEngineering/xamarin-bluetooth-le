@@ -159,7 +159,8 @@ namespace Plugin.BLE.iOS
                 task = Task.FromResult(true);
             }
 
-            var nsdata = NSData.FromArray(data);
+            //var nsdata = NSData.FromArray(data);
+            var nsdata = NSData.FromString(System.Text.Encoding.UTF8.GetString(data));
             _parentDevice.WriteValue(nsdata, _nativeCharacteristic, writeType.ToNative());
 
             return task;
