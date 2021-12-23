@@ -4,6 +4,7 @@
     </PropertyGroup>
     <ItemGroup>
       <PackageReference Include="MvvmCross" Version="6.3.1" />
+      <PackageReference Include="Plugin.BLE" Version="2.1.2" />
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\Plugin.BLE.Abstractions\Plugin.BLE.Abstractions.csproj" />
