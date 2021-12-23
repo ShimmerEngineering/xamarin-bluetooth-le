@@ -2,5 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>7.1</LangVersion>
+    <AssemblyVersion>1.1.21354.1</AssemblyVersion>
+    <FileVersion>1.1.21354.1</FileVersion>
   </PropertyGroup>
 </Project>
