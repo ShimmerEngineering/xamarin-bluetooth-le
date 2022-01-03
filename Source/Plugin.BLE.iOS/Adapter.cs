@@ -312,7 +312,7 @@ namespace Plugin.BLE.iOS
                 else if (key == CBAdvertisement.DataServiceUUIDsKey || key == CBAdvertisement.DataOverflowServiceUUIDsKey)
                 {
                     var array = (NSArray)advertisementData.ObjectForKey(key);
-
+                    /*
                     for (nuint i = 0; i < array.Count; i++)
                     {
                         var cbuuid = array.GetItem<CBUUID>(i);
@@ -336,6 +336,7 @@ namespace Plugin.BLE.iOS
                                 break;
                         }
                     }
+                    */
                 }
                 else if (key == CBAdvertisement.DataTxPowerLevelKey)
                 {

@@ -1,3 +1,8 @@
+# Changelog (Shimmer)
+
+Version 1.1.21354.1
+- Updates made to fix iOS for >VS17.0.0, [see](https://developercommunity2.visualstudio.com/t/XamariniOS-getting-FoundationMonoTouch/1610258?space=8) for details
+
 # <img src="icon_small.png" width="71" height="71"/> Bluetooth LE plugin for Xamarin ![Build Status](https://app.bitrise.io/app/3fe54d0a5f43c2bf/status.svg?token=i9LUY4rIecZWd_3j7hwXgw) 
 
 Xamarin and MvvMCross plugin for accessing the bluetooth functionality. The plugin is loosely based on the BLE implementation of [Monkey Robotics](https://github.com/xamarin/Monkey.Robotics). 

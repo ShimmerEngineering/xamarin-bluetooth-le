@@ -182,7 +182,7 @@ namespace BLE.Client.ViewModels
             {
                 _updatesStarted = false;
 
-                await Characteristic.StopUpdatesAsync();
+                //await Characteristic.StopUpdatesAsync();
                 Characteristic.ValueUpdated -= CharacteristicOnValueUpdated;
 
                 Messages.Insert(0, $"Stop updates");
